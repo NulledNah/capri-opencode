@@ -199,6 +199,90 @@ function updateConfig(patch) {
   return cfg;
 }
 
+// ---- local control API: the OpenCode desktop panel talks to this ----
+
+const CONTROL_LANGS = new Set(['auto', ...LANGS]);
+
+function publicConfig() {
+  const c = config.load();
+  return {
+    claude: c.claude !== false,
+    visible: c.visible !== false,
+    muted: !!c.muted,
+    volume: Number(c.volume ?? 0.7),
+    scale: Number(c.scale ?? 0.6),
+    lang: CONTROL_LANGS.has(c.lang) ? c.lang : 'auto',
+    motion: c.motion || 'auto',
+    rest: c.rest === 'taskbar' ? 'taskbar' : 'corner',
+    wander: c.wander !== false,
+    possess: c.possess !== false,
+    chatModel: c.chatModel || null,
+  };
+}
+
+function controlState() {
+  return {
+    ok: true,
+    version: app.getVersion(),
+    linked: !!config.load().linked,
+    config: publicConfig(),
+    plugin: plugin.status(),
+    models: chatModels,
+  };
+}
+
+function controlConfig(patch) {
+  if (!patch || typeof patch !== 'object') throw new Error('invalid config patch');
+  const clean = {};
+  if ('claude' in patch) clean.claude = !!patch.claude;
+  if ('muted' in patch) clean.muted = !!patch.muted;
+  if ('wander' in patch) clean.wander = !!patch.wander;
+  if ('possess' in patch) clean.possess = !!patch.possess;
+  if ('volume' in patch) clean.volume = Math.max(0, Math.min(1, Number(patch.volume) || 0));
+  if ('scale' in patch) clean.scale = Math.max(0.3, Math.min(1.2, Number(patch.scale) || 0.6));
+  if ('lang' in patch) {
+    if (!CONTROL_LANGS.has(patch.lang)) throw new Error('invalid language');
+    clean.lang = patch.lang;
+  }
+  if ('motion' in patch) {
+    if (!['auto', 'full', 'reduced'].includes(patch.motion)) throw new Error('invalid motion');
+    clean.motion = patch.motion;
+    clean.motionAsked = true;
+  }
+  if ('rest' in patch) {
+    if (!['corner', 'taskbar'].includes(patch.rest)) throw new Error('invalid rest');
+    clean.rest = patch.rest;
+  }
+  if ('chatModel' in patch) clean.chatModel = patch.chatModel ? String(patch.chatModel) : null;
+  updateConfig(clean);
+  return { ok: true, config: publicConfig() };
+}
+
+function controlCommand(body) {
+  const name = String(body?.name || '');
+  if (name === 'enable') {
+    updateConfig({ claude: true });
+    toggleVisible(true);
+  } else if (name === 'disable') {
+    updateConfig({ claude: false });
+    toggleVisible(false);
+  } else if (name === 'show') toggleVisible(true);
+  else if (name === 'hide') toggleVisible(false);
+  else if (name === 'demo') playDemo();
+  else if (['teleport', 'satellite', 'report', 'chat', 'welcome', 'status', 'intro'].includes(name)) sendCommand(name);
+  else throw new Error('unknown command: ' + name);
+  return { ok: true };
+}
+
+function controlPlugin(body) {
+  const action = String(body?.action || 'status');
+  if (action === 'install') plugin.install();
+  else if (action === 'remove') plugin.uninstall();
+  else if (action !== 'status') throw new Error('unknown action: ' + action);
+  rebuildTray();
+  return { ok: true, plugin: plugin.status() };
+}
+
 function rebuildTray() {
   if (!tray) return;
   const cfg = config.load();
@@ -526,11 +610,12 @@ function main() {
         overlay?.webContents.send('windows:update', data);
       },
     });
-    createBridge({
-      port: PORT,
-      onEvent: (evt) => overlay?.webContents.send('claude:event', evt),
-      onDebug: DEV ? debugHandler : null,
-    });
+      createBridge({
+        port: PORT,
+        onEvent: (evt) => overlay?.webContents.send('claude:event', evt),
+        onDebug: DEV ? debugHandler : null,
+        control: { state: controlState, config: controlConfig, command: controlCommand, plugin: controlPlugin },
+      });
     globalShortcut.register('Control+Alt+C', () => toggleVisible());
     refreshModels(); // for her menu's model list
     screen.on('display-metrics-changed', fitOverlay);

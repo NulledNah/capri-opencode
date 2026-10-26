@@ -1,7 +1,8 @@
 'use strict';
 
-// Local HTTP bridge. Claude Code hooks POST their event JSON to /event,
-// we hand it to the overlay. Bound to 127.0.0.1 only.
+// Local HTTP bridge. The OpenCode plugin POSTs its event JSON to /event, and
+// local addons (OpenCode desktop panel) drive her through /state, /config,
+// /command and /plugin. Bound to 127.0.0.1 only.
 
 const http = require('node:http');
 
@@ -37,7 +38,7 @@ function readJson(req) {
   });
 }
 
-function createBridge({ port, onEvent, onDebug }) {
+function createBridge({ port, onEvent, onDebug, control }) {
   const server = http.createServer(async (req, res) => {
     // Browsers always send an Origin header on cross-site requests; hooks never do.
     // Refusing those keeps random web pages from puppeting Capri.
@@ -62,6 +63,25 @@ function createBridge({ port, onEvent, onDebug }) {
       }
     }
 
+    if (control) {
+      try {
+        if (req.method === 'GET' && url.pathname === '/state') {
+          return send(res, 200, control.state());
+        }
+        if (req.method === 'POST' && url.pathname === '/config') {
+          return send(res, 200, control.config(await readJson(req)));
+        }
+        if (req.method === 'POST' && url.pathname === '/command') {
+          return send(res, 200, control.command(await readJson(req)));
+        }
+        if (req.method === 'POST' && url.pathname === '/plugin') {
+          return send(res, 200, control.plugin(await readJson(req)));
+        }
+      } catch (err) {
+        return send(res, 400, { ok: false, error: err.message });
+      }
+    }
+
     if (onDebug && url.pathname.startsWith('/debug/')) {
       try {
         const body = req.method === 'POST' ? await readJson(req).catch(() => ({})) : {};
@@ -76,7 +96,7 @@ function createBridge({ port, onEvent, onDebug }) {
 
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      console.error(`[capri] port ${port} already in use, Claude events will not reach this instance`);
+      console.error(`[capri] port ${port} already in use, OpenCode events will not reach this instance`);
     } else {
       console.error('[capri] bridge error:', err.message);
     }

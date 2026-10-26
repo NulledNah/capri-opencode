@@ -53,16 +53,17 @@
 }
 
 :root {
-  /* palette sampled from the show */
-  --ink: oklch(0.17 0.035 300);
-  --ink-2: oklch(0.23 0.045 300);
-  --paper: oklch(0.97 0.012 350);
-  --paper-2: oklch(0.84 0.025 340);
-  --paper-3: oklch(0.66 0.035 320);
+  /* palette from her panel: flat violet plate, lavender text, mint accent */
+  --ink: oklch(0.16 0.04 300);
+  --ink-2: oklch(0.21 0.05 300);
+  --paper: oklch(0.87 0.05 300);
+  --paper-2: oklch(0.78 0.07 300);
+  --paper-3: oklch(0.64 0.07 300);
   --red: oklch(0.65 0.245 15);
-  --green: oklch(0.88 0.24 148);
-  --violet: oklch(0.55 0.255 292);
+  --green: oklch(0.85 0.15 158);
+  --violet: oklch(0.55 0.22 293);
   --blue: oklch(0.6 0.2 260);
+  --hairline: oklch(0.87 0.05 300 / 0.1);
 
   --font-display: 'Chakra Petch', 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
@@ -182,6 +183,8 @@ body {
   gap: 12px;
   padding: 14px 16px 16px 14px;
   background: var(--ink);
+  /* a violet edge inside the shape, then the offset shadow outside it */
+  box-shadow: inset 0 0 0 2px var(--violet);
   /* chamfered corners and one jagged bite in the top edge */
   clip-path: polygon(
     0 var(--cut), var(--cut) 0,
@@ -273,8 +276,9 @@ body {
 .panel__state {
   margin-left: auto;
   padding: 2px 6px 1px;
-  background: var(--accent);
-  color: var(--ink);
+  background: color-mix(in oklch, var(--accent) 16%, transparent);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 60%, transparent);
   font-weight: 600;
   letter-spacing: 0.12em;
   clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
@@ -325,7 +329,7 @@ body {
   max-height: min(44vh, 420px);
   overflow-y: auto;
   overscroll-behavior: contain;
-  border-left: 2px solid var(--accent);
+  border-left: 2px solid var(--violet);
   font-family: var(--font-mono);
   font-size: calc(var(--text-data) + 1px);
   line-height: 1.6;
@@ -402,7 +406,7 @@ body {
   margin: 10px 0 0;
   padding: 8px 0 0;
   list-style: none;
-  border-top: 1px solid oklch(0.97 0.012 350 / 0.08);
+  border-top: 1px solid var(--hairline);
   font-family: var(--font-mono);
   font-size: var(--text-data);
   line-height: 1.6;
@@ -505,7 +509,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   margin: 0;
-  border-top: 1px solid oklch(0.97 0.012 350 / 0.08);
+  border-top: 1px solid var(--hairline);
 }
 
 .report__cell {
@@ -514,7 +518,7 @@ body {
 
 .report__cell + .report__cell {
   padding-left: 10px;
-  border-left: 1px solid oklch(0.97 0.012 350 / 0.08);
+  border-left: 1px solid var(--hairline);
 }
 
 .report__cell .report__label {
@@ -581,7 +585,7 @@ body {
   row-gap: 3px;
   margin-top: 9px;
   padding-top: 6px;
-  border-top: 1px solid oklch(0.97 0.012 350 / 0.08);
+  border-top: 1px solid var(--hairline);
   font-size: 9px;
   color: var(--paper-3);
 }

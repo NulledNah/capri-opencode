@@ -86,9 +86,14 @@ export class Guide {
         // not watching Claude Code: she's just here to keep you company
         this.capri.perform('curious', this.capri.towardCenter());
         await this.ask({ face: 'grin', line: w.hi, quote: `${w.alone}\n${w.menu}`, actions: [{ id: 'ok', label: w.ok, primary: true }] });
-      } else if (hooks.installed) {
+      } else if (hooks.installed && this.brain.linked) {
         this.capri.perform('curious', this.capri.towardCenter());
         await this.ask({ face: 'look', line: w.ready, quote: w.readyHow, actions: [{ id: 'ok', label: w.ok, primary: true }, { id: 'more', label: this.t.more }] })
+          .then((id) => id === 'more' && this.menuNow());
+      } else if (hooks.installed) {
+        // installed, but OpenCode hasn't loaded it yet: only a restart does that
+        this.capri.perform('curious', this.capri.towardCenter());
+        await this.ask({ face: 'look', line: w.pending, quote: w.restart, actions: [{ id: 'ok', label: w.ok, primary: true }, { id: 'more', label: this.t.more }] })
           .then((id) => id === 'more' && this.menuNow());
       } else if (found) {
         await this.connect();
@@ -174,6 +179,11 @@ export class Guide {
   // Where Claude is: the window you typed your last prompt in.
   async claude() {
     const t = this.t.claude;
+    if (!this.brain.linked) {
+      const w = this.t.welcome;
+      await this.ask({ face: 'aside', line: w.pending, quote: w.restart, actions: this.ok() });
+      return;
+    }
     const win = this.claudeWindow();
     if (!win) {
       await this.ask({ face: 'aside', line: t.unknown, quote: t.unknownHow, actions: this.ok() });
