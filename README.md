@@ -22,6 +22,13 @@ Capri already understands and posts them to her local bridge
 - Node.js 20 or newer to run her from source.
 - [Ollama](https://ollama.com) only if you want to talk to her.
 
+## Install (Windows)
+
+Grab `Capri-Setup-<version>.exe` from
+[releases](https://github.com/NulledNah/capri-opencode/releases) and run it.
+Then **Plug me in** from her welcome panel (or her tray menu) to install the
+OpenCode plugin, and restart OpenCode: the plugin is what lets her follow you.
+
 ## Run from source
 
 ```bash
