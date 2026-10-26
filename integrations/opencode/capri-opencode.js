@@ -12,7 +12,27 @@
  * Port override: CAPRI_PORT
  */
 
+import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
 const PORT = Number(process.env.CAPRI_PORT) || 47823;
+
+// Where the app keeps its config: with `follow` on she is only alive while
+// OpenCode is, so the plugin starts her when OpenCode opens.
+const CONFIG_FILE = join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'capri-desktop', 'config.json');
+
+function startCapri() {
+  try {
+    const cfg = JSON.parse(readFileSync(CONFIG_FILE, 'utf8'));
+    if (cfg.follow !== true || !cfg.launch?.exe) return;
+    fetch(`http://127.0.0.1:${PORT}/state`, { signal: AbortSignal.timeout(400) }).then(
+      () => {},
+      () => spawn(cfg.launch.exe, cfg.launch.args || [], { detached: true, stdio: 'ignore' }).unref(),
+    );
+  } catch { /* not configured, or she never ran here */ }
+}
 
 // opencode tool name -> the Claude Code tool name Capri's labels know.
 const TOOLS = {
@@ -68,6 +88,8 @@ export default {
   async setup(ctx) {
     const s = state();
     const home = ctx.location?.directory || process.cwd();
+
+    startCapri();
 
     // every event arrives once per loaded location: the first instance to see an id keeps it
     const once = (id) => {

@@ -2,6 +2,7 @@
 
 const path = require('node:path');
 const fs = require('node:fs');
+const { execFileSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 const {
   app, BrowserWindow, Tray, Menu, ipcMain, screen, protocol, net, shell, globalShortcut, nativeImage,
@@ -216,6 +217,7 @@ function publicConfig() {
     rest: c.rest === 'taskbar' ? 'taskbar' : 'corner',
     wander: c.wander !== false,
     possess: c.possess !== false,
+    follow: c.follow === true,
     chatModel: c.chatModel || null,
   };
 }
@@ -238,6 +240,7 @@ function controlConfig(patch) {
   if ('muted' in patch) clean.muted = !!patch.muted;
   if ('wander' in patch) clean.wander = !!patch.wander;
   if ('possess' in patch) clean.possess = !!patch.possess;
+  if ('follow' in patch) clean.follow = !!patch.follow;
   if ('volume' in patch) clean.volume = Math.max(0, Math.min(1, Number(patch.volume) || 0));
   if ('scale' in patch) clean.scale = Math.max(0.3, Math.min(1.2, Number(patch.scale) || 0.6));
   if ('lang' in patch) {
@@ -368,6 +371,12 @@ function rebuildTray() {
       checked: app.getLoginItemSettings(loginItemOptions()).openAtLogin,
       click: (item) => app.setLoginItemSettings({ ...loginItemOptions(), openAtLogin: item.checked }),
     },
+    {
+      label: t.follow,
+      type: 'checkbox',
+      checked: cfg.follow === true,
+      click: (item) => updateConfig({ follow: item.checked }),
+    },
     // her plugin, while she watches OpenCode
     ...(cfg.claude ? [
       { type: 'separator' },
@@ -387,6 +396,33 @@ function rebuildTray() {
 // it needs the project folder as argument.
 function loginItemOptions() {
   return app.isPackaged ? {} : { path: process.execPath, args: [ROOT] };
+}
+
+// ---- tied to OpenCode -------------------------------------------------------
+// With `follow` on she only lives while OpenCode does: this side quits when it
+// closes, the OpenCode plugin starts her back when it opens.
+const WATCH_EXE = process.env.CAPRI_WATCH_PROC || 'OpenCode.exe';
+
+function opencodeRunning() {
+  if (process.platform !== 'win32') return true;
+  try {
+    const out = execFileSync('tasklist', ['/FI', `IMAGENAME eq ${WATCH_EXE}`, '/NH'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    return out.toLowerCase().includes(WATCH_EXE.toLowerCase());
+  } catch {
+    return true; // tasklist failed: never quit her over that
+  }
+}
+
+function watchOpenCode() {
+  let missed = 0;
+  setInterval(() => {
+    if (!config.load().follow) { missed = 0; return; }
+    if (opencodeRunning()) { missed = 0; return; }
+    if (++missed >= 2) app.quit(); // two polls in a row: it really closed, not a restart
+  }, 3000);
 }
 
 // From the tray, she says how it went; from her welcome panel (quiet), the panel does.
@@ -599,6 +635,8 @@ function main() {
   if (process.platform === 'win32') app.setAppUserModelId('capri.desktop');
 
   app.whenReady().then(() => {
+    // where the OpenCode plugin finds her, to start her when OpenCode opens
+    config.save({ launch: { exe: process.execPath, args: app.isPackaged ? [] : [ROOT] } });
     serveProtocol();
     registerIpc();
     createOverlay();
@@ -618,6 +656,7 @@ function main() {
       });
     globalShortcut.register('Control+Alt+C', () => toggleVisible());
     refreshModels(); // for her menu's model list
+    watchOpenCode();
     screen.on('display-metrics-changed', fitOverlay);
     screen.on('display-added', () => { fitOverlay(); rebuildTray(); });
     screen.on('display-removed', () => { fitOverlay(); rebuildTray(); });

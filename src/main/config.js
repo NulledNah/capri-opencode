@@ -17,6 +17,7 @@ const DEFAULTS = {
   linked: false,     // a Claude Code event has reached her at least once
   chatModel: null,   // the Ollama model she talks with (null: the first one installed)
   claude: true,      // she watches Claude Code (off: she just keeps you company, no word of it)
+  follow: false,     // tied to OpenCode: she quits when it closes, and the plugin starts her when it opens
   rest: 'corner',    // where she rests when nothing's going on: 'corner', or 'taskbar' (sitting on it)
   motion: 'auto',    // her animations: 'auto' (like Windows' animation effects), 'full' or 'reduced'
   motionAsked: false, // she asked once, Windows' animations being off, whether to move anyway
