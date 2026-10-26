@@ -17,7 +17,8 @@ Capri already understands and posts them to her local bridge
 
 ## Requirements
 
-- [OpenCode](https://opencode.ai/docs/) installed (CLI or desktop).
+- [OpenCode 2](https://opencode.ai/v2/docs/) installed (CLI or desktop). V1
+  plugin implementations don't run in V2: this plugin is V2-only.
 - Node.js 20 or newer to run her from source.
 - [Ollama](https://ollama.com) only if you want to talk to her.
 
@@ -52,15 +53,22 @@ Or run `integrations/opencode/install.bat`.
 | OpenCode | Capri |
 |---|---|
 | `session.created` / `session.deleted` | hello / goodbye |
-| user prompt | her "new gig" line |
-| tool calls | ticker, sparks, action count, files changed |
-| tool errors | impact, glitch, the error line that matters |
-| permission requests | she comes to you |
-| `session.idle` | victory sequence, summary, last answer |
-| `session.error` | crash line |
+| prompt hook | her "new gig" line |
+| `tool.execute.before` hook | ticker, sparks, action count, files changed |
+| `session.tool.failed` | impact, glitch, the error line that matters |
+| `permission.asked` | she comes to you |
+| `session.execution.succeeded` | victory sequence, summary, last answer |
+| `session.execution.failed` | crash line |
+| `session.compaction.started` | the compacting line |
 
 Subagent sessions are ignored so they don't double-count or celebrate early.
 Esc (aborted run) is not treated as a crash.
+
+## Local control API
+
+The bridge also exposes a small local API used by the OpenCode desktop panel
+(`CapriPanel`): `GET /state`, `POST /config`, `POST /command`, `POST /plugin`,
+all on `127.0.0.1:47823` and refused when a browser `Origin` header is present.
 
 ## Build the installer
 

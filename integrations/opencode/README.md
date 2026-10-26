@@ -27,22 +27,30 @@ Port override: set `CAPRI_PORT` before starting OpenCode.
 
 ## What she sees
 
-| OpenCode | Capri |
+| OpenCode 2 | Capri |
 |---|---|
 | `session.created` | `SessionStart` (hello) |
-| `chat.message` | `UserPromptSubmit` |
-| `tool.execute.before` | `PreToolUse` (ticker, sparks, tool count) |
-| `message.part.updated` tool error | `PostToolUseFailure` |
-| `permission.updated` / `permission.asked` | `Notification` (she comes to you) |
-| `session.idle` | `Stop` (victory, summary, last answer) |
-| `session.error` (not Esc) | `StopFailure` |
-| `session.compacted` | `PreCompact` |
+| `session.prompt` hook | `UserPromptSubmit` |
+| `tool.execute.before` hook | `PreToolUse` (ticker, sparks, tool count) |
+| `session.tool.failed` | `PostToolUseFailure` |
+| `permission.asked` | `Notification` (she comes to you) |
+| `session.execution.succeeded` (+ `session.text.ended`) | `Stop` (victory, summary, last answer) |
+| `session.execution.failed` | `StopFailure` |
+| `session.compaction.started` | `PreCompact` |
 | `session.deleted` | `SessionEnd` |
 
-Subagent sessions (children) are ignored: the parent's `task` call already shows
-in her ticker, and their `session.idle` would trigger an early celebration.
-Tool names and args are mapped to Claude Code's (`edit`→`Edit`,
-`filePath`→`file_path`), so her labels and file counts work unchanged.
+Subagent sessions (children) are ignored: the parent's `subagent` call already
+shows in her ticker, and their `session.execution.succeeded` would trigger an
+early celebration. Tool names and args are mapped to Claude Code's
+(`edit`→`Edit`, `filePath`→`file_path`), so her labels and file counts work
+unchanged.
+
+OpenCode 2 loads the plugin once per open location, in a single server process,
+and every instance receives every event. The plugin keeps that shared state on
+`globalThis` and drops an event id it has already sent, so each action reaches
+her once.
+
+This is a V2 plugin: a V1 implementation is a different API and doesn't run.
 
 ## Check
 

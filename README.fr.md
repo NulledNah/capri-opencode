@@ -17,7 +17,8 @@ d'`app.asar`, aucun fork d'OpenCode. Le plugin est dans
 
 ## Prérequis
 
-- [OpenCode](https://opencode.ai/docs/) installé (CLI ou bureau).
+- [OpenCode 2](https://opencode.ai/v2/docs/) installé (CLI ou bureau). Les
+  plugins écrits pour V1 ne tournent pas sous V2 : celui-ci est pour V2.
 - Node.js 20 ou plus pour la lancer depuis les sources.
 - [Ollama](https://ollama.com) seulement si vous voulez lui parler.
 
@@ -52,12 +53,13 @@ Ou lancez `integrations/opencode/install.bat`.
 | OpenCode | Capri |
 |---|---|
 | `session.created` / `session.deleted` | bonjour / au revoir |
-| prompt utilisateur | sa ligne « nouvelle mission » |
-| appels d'outils | ticker, étincelles, compteur, fichiers |
-| erreurs d'outil | impact, glitch, la ligne d'erreur utile |
-| demandes de permission | elle vient vous chercher |
-| `session.idle` | séquence de victoire, résumé, dernière réponse |
-| `session.error` | ligne de plantage |
+| hook de prompt | sa ligne « nouvelle mission » |
+| hook `tool.execute.before` | ticker, étincelles, compteur, fichiers |
+| `session.tool.failed` | impact, glitch, la ligne d'erreur utile |
+| `permission.asked` | elle vient vous chercher |
+| `session.execution.succeeded` | séquence de victoire, résumé, dernière réponse |
+| `session.execution.failed` | ligne de plantage |
+| `session.compaction.started` | la ligne de compactage |
 
 Les sessions de sous-agents sont ignorées : pas de double comptage ni de
 célébration trop tôt. Échap (course annulée) n'est pas un plantage.

@@ -1,14 +1,14 @@
 /*
- * Capri bridge for opencode.
+ * Capri bridge for OpenCode 2.
  *
- * Translates opencode plugin events into the Claude Code hook events Capri
- * (github.com/mochiiwuff/capri-desktop) already understands, and POSTs them to
- * its local bridge: http://127.0.0.1:47823/event
+ * Translates OpenCode's plugin events and hooks into the Claude Code hook events
+ * Capri (github.com/mochiiwuff/capri-desktop) already understands, and POSTs them
+ * to her local bridge: http://127.0.0.1:47823/event
  *
  * No patch, no fork. Capri must be running; when it is not, the POST fails
  * silently and opencode is unaffected.
  *
- * Install: copy this file to ~/.config/opencode/plugins/ (or run installa.bat).
+ * Install: copy this file to ~/.config/opencode/plugins/ (or run install.bat).
  * Port override: CAPRI_PORT
  */
 
@@ -19,7 +19,7 @@ const TOOLS = {
   read: 'Read', write: 'Write', edit: 'Edit', multiedit: 'MultiEdit',
   notebookedit: 'NotebookEdit', bash: 'Bash', shell: 'Bash',
   powershell: 'PowerShell', grep: 'Grep', glob: 'Glob', webfetch: 'WebFetch',
-  websearch: 'WebSearch', task: 'Task', agent: 'Agent', skill: 'Skill',
+  websearch: 'WebSearch', task: 'Task', subagent: 'Task', agent: 'Agent', skill: 'Skill',
 };
 
 // opencode camelCase args -> the snake_case keys Capri reads.
@@ -49,146 +49,171 @@ function emit(event) {
   }).catch(() => {});
 }
 
-export const Capri = async ({ directory }) => {
-  const parts = new Map();          // messageID -> Map(partID -> text)
-  const lastAssistant = new Map();  // sessionID -> messageID
-  const lastUser = new Map();       // sessionID -> messageID
-  const failed = new Set();         // tool callIDs whose failure was sent
-  const children = new Set();       // subagent sessions: the parent's task tool already covers them
-  const isChild = (sessionID) => children.has(sessionID);
+// opencode loads the plugin once per open location, in the same server process, and
+// every instance receives every event. Shared state + event ids make each event count once.
+function state() {
+  return (globalThis.__capriOpencode ||= {
+    seen: new Set(),
+    dirs: new Map(),     // sessionID -> cwd
+    children: new Set(), // subagent sessions
+    calls: new Map(),    // callID -> { tool, input }
+    texts: new Map(),    // sessionID -> { messageID, parts: Map }
+  });
+}
 
-  const answer = (messageID) => {
-    const texts = parts.get(messageID);
-    return texts ? [...texts.values()].join('\n\n').trim() : '';
-  };
+const MAX_CALLS = 512;
 
-  return {
-    "chat.message": async (info, out) => {
-      if (isChild(info.sessionID)) return;
-      try {
-        lastUser.set(info.sessionID, out.message.id);
-        const prompt = out.parts
-          .filter((p) => p.type === 'text' && !p.synthetic && !p.ignored)
-          .map((p) => p.text)
-          .join('\n')
-          .trim();
-        emit({ hook_event_name: 'UserPromptSubmit', session_id: info.sessionID, cwd: directory, prompt });
-      } catch { /* never break opencode */ }
-    },
+export default {
+  id: 'capri',
+  async setup(ctx) {
+    const s = state();
+    const home = ctx.location?.directory || process.cwd();
 
-    "tool.execute.before": async (info, out) => {
-      if (isChild(info.sessionID)) return;
+    // every event arrives once per loaded location: the first instance to see an id keeps it
+    const once = (id) => {
+      if (!id || s.seen.has(id)) return false;
+      s.seen.add(id);
+      if (s.seen.size > 1024) s.seen.delete(s.seen.values().next().value);
+      return true;
+    };
+    const cwdOf = (sessionID) => s.dirs.get(sessionID) || home;
+    const isChild = (sessionID) => s.children.has(sessionID);
+    const answer = (sessionID) => {
+      const t = s.texts.get(sessionID);
+      return t ? [...t.parts.values()].join('\n\n').trim() : '';
+    };
+
+    await ctx.session.hook('prompt', (event) => {
       try {
         emit({
-          hook_event_name: 'PreToolUse',
-          session_id: info.sessionID,
-          cwd: directory,
-          tool_name: TOOLS[info.tool] || info.tool,
-          tool_input: toolInput(out.args),
-          tool_use_id: info.callID,
+          hook_event_name: 'UserPromptSubmit',
+          session_id: event.sessionID,
+          cwd: cwdOf(event.sessionID),
+          prompt: String(event.prompt?.text || '').trim(),
         });
       } catch { /* never break opencode */ }
-    },
+    });
 
-    event: async ({ event }) => {
+    await ctx.tool.hook('execute.before', (event) => {
       try {
-        const p = event.properties || {};
-        switch (event.type) {
-          case 'session.created': {
-            const info = p.info;
-            if (info.parentID) {
-              children.add(info.id); // subagent session: its tools would double-count and its idle would celebrate early
-              return;
-            }
-            return emit({
-              hook_event_name: 'SessionStart',
-              session_id: info.id,
-              cwd: info.directory || directory,
-              session_title: info.title,
-              source: 'startup',
-            });
-          }
-
-          case 'message.updated': {
-            const info = p.info;
-            if (info?.role === 'assistant' && !isChild(info.sessionID)) {
-              const prev = lastAssistant.get(info.sessionID);
-              if (prev && prev !== info.id) parts.delete(prev); // keep only the last answer
-              lastAssistant.set(info.sessionID, info.id);
-            }
-            return;
-          }
-
-          case 'message.part.updated': {
-            const part = p.part;
-            if (!part || !part.sessionID || isChild(part.sessionID)) return;
-            if (part.type === 'text' && part.messageID !== lastUser.get(part.sessionID)) {
-              const texts = parts.get(part.messageID) || new Map();
-              texts.set(part.id, part.text);
-              parts.set(part.messageID, texts);
-            }
-            if (part.type === 'tool' && part.state?.status === 'error' && !failed.has(part.callID)) {
-              failed.add(part.callID);
-              emit({
-                hook_event_name: 'PostToolUseFailure',
-                session_id: part.sessionID,
-                cwd: directory,
-                tool_name: TOOLS[part.tool] || part.tool,
-                tool_input: toolInput(part.state.input),
-                tool_use_id: part.callID,
-                error: part.state.error,
-              });
-            }
-            return;
-          }
-
-          case 'permission.updated': // SDK name
-          case 'permission.asked':   // newer alias
-            return emit({
-              hook_event_name: 'Notification',
-              session_id: p.sessionID,
-              cwd: directory,
-              notification_type: 'permission_prompt',
-              message: p.title || p.permission || p.type,
-            });
-
-          case 'session.idle':
-            if (isChild(p.sessionID)) return;
-            return emit({
-              hook_event_name: 'Stop',
-              session_id: p.sessionID,
-              cwd: directory,
-              last_assistant_message: answer(lastAssistant.get(p.sessionID)),
-            });
-
-          case 'session.error':
-            if (isChild(p.sessionID)) return;
-            if (!p.error || p.error.name === 'MessageAbortedError') return; // you pressed Esc
-            return emit({
-              hook_event_name: 'StopFailure',
-              session_id: p.sessionID,
-              cwd: directory,
-              error: p.error.data?.message || p.error.name,
-            });
-
-          case 'session.compacted':
-            if (isChild(p.sessionID)) return;
-            return emit({ hook_event_name: 'PreCompact', session_id: p.sessionID, cwd: directory });
-
-          case 'session.deleted': {
-            const id = p.info.id;
-            const wasChild = children.delete(id);
-            lastAssistant.delete(id);
-            lastUser.delete(id);
-            if (wasChild) return;
-            return emit({
-              hook_event_name: 'SessionEnd',
-              session_id: id,
-              cwd: p.info.directory || directory,
-            });
-          }
-        }
+        s.calls.set(event.id, { tool: event.tool, input: event.input });
+        if (s.calls.size > MAX_CALLS) s.calls.delete(s.calls.keys().next().value);
+        emit({
+          hook_event_name: 'PreToolUse',
+          session_id: event.sessionID,
+          cwd: cwdOf(event.sessionID),
+          tool_name: TOOLS[event.tool] || event.tool,
+          tool_input: toolInput(event.input),
+          tool_use_id: event.id,
+        });
       } catch { /* never break opencode */ }
-    },
-  };
+    });
+
+    function handle(event) {
+      const p = event.data || {};
+      switch (event.type) {
+        case 'session.created': {
+          if (!once(event.id)) return;
+          const id = p.sessionID;
+          s.dirs.set(id, p.location?.directory || home);
+          if (p.parentID) {
+            s.children.add(id); // subagent session: its tools would double-count and it would celebrate early
+            return;
+          }
+          return emit({
+            hook_event_name: 'SessionStart',
+            session_id: id,
+            cwd: cwdOf(id),
+            session_title: p.title,
+            source: 'startup',
+          });
+        }
+
+        case 'session.text.ended': {
+          if (!once(event.id) || isChild(p.sessionID)) return;
+          const cur = s.texts.get(p.sessionID);
+          if (cur && cur.messageID === p.assistantMessageID) cur.parts.set(p.ordinal, p.text);
+          else s.texts.set(p.sessionID, { messageID: p.assistantMessageID, parts: new Map([[p.ordinal, p.text]]) });
+          return;
+        }
+
+        case 'session.tool.failed': {
+          if (!once(event.id) || isChild(p.sessionID)) return;
+          const call = s.calls.get(p.id) || {};
+          return emit({
+            hook_event_name: 'PostToolUseFailure',
+            session_id: p.sessionID,
+            cwd: cwdOf(p.sessionID),
+            tool_name: TOOLS[call.tool] || call.tool,
+            tool_input: toolInput(call.input),
+            tool_use_id: p.id,
+            error: p.error?.message || p.error?.type,
+          });
+        }
+
+        case 'permission.asked': {
+          if (!once(event.id)) return;
+          const what = [p.action, ...(p.resources || [])].filter(Boolean).join(' ');
+          return emit({
+            hook_event_name: 'Notification',
+            session_id: p.sessionID,
+            cwd: cwdOf(p.sessionID),
+            notification_type: 'permission_prompt',
+            message: what,
+          });
+        }
+
+        case 'session.execution.succeeded': {
+          if (!once(event.id) || isChild(p.sessionID)) return;
+          return emit({
+            hook_event_name: 'Stop',
+            session_id: p.sessionID,
+            cwd: cwdOf(p.sessionID),
+            last_assistant_message: answer(p.sessionID),
+          });
+        }
+
+        case 'session.execution.failed': {
+          if (!once(event.id) || isChild(p.sessionID)) return;
+          return emit({
+            hook_event_name: 'StopFailure',
+            session_id: p.sessionID,
+            cwd: cwdOf(p.sessionID),
+            error: p.error?.message || p.error?.type || p.message,
+          });
+        }
+
+        // Esc: you stopped it, it didn't crash.
+        case 'session.execution.interrupted':
+          return;
+
+        case 'session.compaction.started': {
+          if (!once(event.id) || isChild(p.sessionID)) return;
+          return emit({ hook_event_name: 'PreCompact', session_id: p.sessionID, cwd: cwdOf(p.sessionID) });
+        }
+
+        case 'session.deleted': {
+          if (!once(event.id)) return;
+          const id = p.sessionID;
+          const wasChild = s.children.delete(id);
+          s.texts.delete(id);
+          const cwd = cwdOf(id);
+          s.dirs.delete(id);
+          if (wasChild) return;
+          return emit({ hook_event_name: 'SessionEnd', session_id: id, cwd });
+        }
+      }
+    }
+
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
+          try { handle(event); } catch { /* never break opencode */ }
+        }
+      } catch { /* aborted on unload */ }
+    })();
+
+    return () => controller.abort();
+  },
 };
