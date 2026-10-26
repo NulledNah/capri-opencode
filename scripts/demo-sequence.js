@@ -71,7 +71,7 @@ module.exports = function demoSteps(lang = 'en') {
     [2200, base('PostToolUseFailure', { tool_name: 'Bash', tool_input: { command: 'npm test -- gigs' }, error: 'Exit code 1\nExpected 20 items, received 21' })],
     [1600, tool('Edit', { file_path: `${CWD}/src/routes/gigs.ts`, old_string_len: 12, new_string_len: 14 })],
     [1000, tool('Bash', { command: 'git push origin main', description: t.push })],
-    [700, base('Notification', { notification_type: 'permission_prompt', title: 'Permission needed', message: 'Claude needs your permission to use Bash' })],
+    [700, base('Notification', { notification_type: 'permission_prompt', title: 'Permission needed', message: 'OpenCode needs your permission to use Bash' })],
     [5200, done('Bash', { command: 'npm test -- gigs' }, 3100)],
     [1500, base('Stop', { last_assistant_message: t.reply })],
     // not a Claude event: starts the showcase once the done panel has been read

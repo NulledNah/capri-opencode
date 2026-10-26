@@ -14,14 +14,14 @@ const { createBridge } = require('./bridge');
 const { startWindowWatch } = require('./windows');
 const ollama = require('./ollama');
 const apps = require('./apps');
-const hooks = require('../../scripts/install-hooks');
+const plugin = require('./plugin');
 const demoSteps = require('../../scripts/demo-sequence');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const DEV = process.argv.includes('--dev');
 const PORT = Number(process.env.CAPRI_PORT) || 47823;
 const SOUND_EXT = /\.(mp3|wav|ogg|m4a)$/i;
-const CLAUDE_CODE_HELP = 'https://code.claude.com/docs/en/quickstart';
+const OPENCODE_HELP = 'https://opencode.ai/docs/';
 const OLLAMA_SITE = 'https://ollama.com';
 
 protocol.registerSchemesAsPrivileged([
@@ -202,7 +202,7 @@ function updateConfig(patch) {
 function rebuildTray() {
   if (!tray) return;
   const cfg = config.load();
-  const hookState = hooks.status();
+  const pluginState = plugin.status();
   const t = TRAY[resolveLang(cfg.lang)];
 
   const displays = screen.getAllDisplays();
@@ -284,13 +284,13 @@ function rebuildTray() {
       checked: app.getLoginItemSettings(loginItemOptions()).openAtLogin,
       click: (item) => app.setLoginItemSettings({ ...loginItemOptions(), openAtLogin: item.checked }),
     },
-    // her hooks, while she watches Claude Code
+    // her plugin, while she watches OpenCode
     ...(cfg.claude ? [
       { type: 'separator' },
-      hookState.installed
+      pluginState.installed
         ? { label: t.hooksOn, enabled: false }
         : { label: t.hooksOff, click: () => runHooks('install') },
-      ...(hookState.installed ? [{ label: t.hooksRemove, click: () => runHooks('uninstall') }] : []),
+      ...(pluginState.installed ? [{ label: t.hooksRemove, click: () => runHooks('uninstall') }] : []),
     ] : []),
     { type: 'separator' },
     { label: t.quit, click: () => app.quit() },
@@ -309,7 +309,7 @@ function loginItemOptions() {
 function runHooks(action, { quiet = false } = {}) {
   let outcome;
   try {
-    const result = action === 'install' ? hooks.install() : hooks.uninstall();
+    const result = action === 'install' ? plugin.install() : plugin.uninstall();
     outcome = { action, ok: true, file: result.file };
   } catch (err) {
     outcome = { action, ok: false, error: err.message };
@@ -349,15 +349,15 @@ function registerIpc() {
     return { x: p.x - b.x, y: p.y - b.y, inside: p.x >= b.x && p.y >= b.y && p.x < b.x + b.width && p.y < b.y + b.height };
   });
   ipcMain.handle('config:get', () => rendererConfig());
-  ipcMain.handle('hooks:status', () => hooks.status());
+  ipcMain.handle('hooks:status', () => plugin.status());
   ipcMain.handle('config:set', (_e, patch) => updateConfig(patch));
   ipcMain.handle('demo:window', (_e, open) => demoWindow(open));
   // right-clicking her: the same menu as the tray icon (which Windows often hides behind the ^ by the clock)
   ipcMain.on('menu:open', () => trayMenu?.popup({ window: overlay }));
   // her welcome panel's buttons
   ipcMain.handle('hooks:install', () => runHooks('install', { quiet: true }));
-  ipcMain.handle('claude:found', () => fs.existsSync(path.dirname(hooks.status().file))); // Claude Code keeps its settings there
-  ipcMain.on('claude:help', () => shell.openExternal(CLAUDE_CODE_HELP));
+  ipcMain.handle('claude:found', () => fs.existsSync(plugin.folder().dir)); // OpenCode keeps its config there
+  ipcMain.on('claude:help', () => shell.openExternal(OPENCODE_HELP));
   ipcMain.handle('windows:get', () => lastWindows);
   // talking to her (chat.js): is Ollama there, with a model to talk with
   ipcMain.handle('chat:status', async () => {
@@ -413,14 +413,13 @@ function registerIpc() {
     const corner = { x: d.x + d.width - 150 - o.x, y: d.y + d.height - 44 - o.y, w: 140, h: 40 };
     return { icon, corner };
   });
-  // her guide: Claude Code's folder (~/.claude) in Explorer, its settings file selected
+  // her guide: OpenCode's config folder in Explorer, opencode.json selected when present
   ipcMain.handle('guide:claudeFolder', () => {
-    const file = hooks.status().file;
-    const dir = path.dirname(file);
+    const { dir, label, hasSettings } = plugin.folder();
     if (!fs.existsSync(dir)) return { found: false, dir };
-    if (fs.existsSync(file)) shell.showItemInFolder(file);
+    if (hasSettings) shell.showItemInFolder(path.join(dir, 'opencode.json'));
     else shell.openPath(dir);
-    return { found: true, dir, file: fs.existsSync(file) };
+    return { found: true, dir, label, hasSettings };
   });
   ipcMain.handle('sounds:list', () => {
     try {

@@ -6,11 +6,11 @@
 
 const { execFile } = require('node:child_process');
 
-// never these: the desktop itself, Windows' own pieces, her (Capri), Claude (she watches it) and
+// never these: the desktop itself, Windows' own pieces, her (Capri), OpenCode (she watches it) and
 // Ollama (she talks through it)
 const KEEP = new Set([
   'explorer', 'applicationframehost', 'textinputhost', 'shellexperiencehost', 'startmenuexperiencehost',
-  'searchhost', 'searchapp', 'lockapp', 'dwm', 'capri', 'electron', 'claude', 'ollama', 'ollama app',
+  'searchhost', 'searchapp', 'lockapp', 'dwm', 'capri', 'electron', 'opencode', 'opencode desktop', 'claude', 'ollama', 'ollama app',
 ]);
 
 function powershell(script) {
