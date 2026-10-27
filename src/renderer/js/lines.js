@@ -490,7 +490,7 @@ export const LINES = {
     hello: [
       'Collegamento stabilito. Ehi, choom.',
       'Costrutto Capricorno online. Cosa costruiamo?',
-      'Tutte le mie anime sono qui. Sveglie.',
+      'Tutte le mie anime sono qui. Sveglie. Guardo {project}.',
       'Biochip caldo. Sono qui.',
     ],
     resume: ['Di nuovo su {project}. Non ho dimenticato niente.', 'Sessione ripresa. Ripartiamo da dove eravamo.'],
@@ -608,7 +608,7 @@ export const LINES = {
       alone: 'Niente Claude qui, niente lavoro: me ne sto sul tuo desktop con te.',
       about: 'Vivo sul tuo desktop e reagisco a quello che fa Claude su questo PC. Senza, me ne sto qui, e va benissimo.',
       connect: 'Vuoi che mi colleghi a Claude? Un clic, poi riavvia Claude.',
-      noClaude: 'Senza Claude, me ne sto qua in giro, facendomi gli affari miei.',
+      noClaude: 'Non trovo Claude su questo PC. Senza Claude, me ne sto qua in giro, facendomi gli affari miei.',
       menu: 'Tasto destro su di me per il menu. Ctrl+Alt+C mi mette via.',
       connectBtn: 'Collegami', later: 'Più tardi', whatClaude: 'Cos’è Claude?', justHang: 'Sto solo in giro', ok: 'Capito',
       connected: 'Collegata!',
