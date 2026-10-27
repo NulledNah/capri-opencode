@@ -19,6 +19,7 @@ const setup = require('./setup');
 const apps = require('./apps');
 const plugin = require('./plugin');
 const launch = require('./launch');
+const spotify = require('./spotify');
 const { ASSISTANTS, assistant } = require('./assistants');
 const activeAssistant = () => assistant(config.load().assistant);
 const activeHooks = () => activeAssistant().hooks;
@@ -295,6 +296,7 @@ function controlState() {
     linked: !!config.load().linked,
     config: publicConfig(),
     plugin: plugin.status(),
+    spotify: spotify.status(),
     models: chatModels,
   };
 }
@@ -357,6 +359,7 @@ function rebuildTray() {
   const cfg = config.load();
   const watched = activeAssistant();
   const hookState = watched.hooks.status();
+  const sp = spotify.status();
   const base = TRAY[resolveLang(cfg.lang)];
   // her lines name the assistant she watches; upstream's say "Claude Code"
   const t = Object.fromEntries(Object.entries(base).map(([key, value]) =>
@@ -438,6 +441,16 @@ function rebuildTray() {
         { label: t.forget, click: forgetChats },
         // the key (or the address) of the one picked, pasted in her panel
         { label: t.apiKey, click: () => sendCommand('setupKey') },
+      ],
+    },
+    {
+      label: t.spotify,
+      submenu: [
+        ...(sp.connected
+          ? [{ label: sp.name || 'Spotify', enabled: false }]
+          : [{ label: t.spotifyConnect, click: () => sendCommand('spotifySetup') }]),
+        { label: t.spotifyClient, click: () => sendCommand('spotifyClient') },
+        ...(sp.connected ? [{ label: t.spotifyDisconnect, click: () => { spotify.disconnect(); rebuildTray(); } }] : []),
       ],
     },
     { label: t.wander, type: 'checkbox', checked: cfg.wander, click: (item) => updateConfig({ wander: item.checked }) },
@@ -751,6 +764,29 @@ function registerIpc() {
   ipcMain.handle('apps:media', (_e, action) => launch.media(action));
   ipcMain.handle('apps:music', (_e, query) => launch.music(query).catch(() => false));
   ipcMain.handle('apps:site', (_e, address) => launch.site(address).catch(() => false));
+  // Spotify: OAuth from her guide, then play/queue from her chat
+  ipcMain.handle('spotify:status', () => spotify.status());
+  ipcMain.handle('spotify:client', (_e, id) => {
+    try {
+      spotify.setClientId(id);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  });
+  ipcMain.handle('spotify:connect', async () => {
+    const res = await spotify.connect();
+    rebuildTray();
+    return res;
+  });
+  ipcMain.handle('spotify:disconnect', () => {
+    const res = spotify.disconnect();
+    rebuildTray();
+    return res;
+  });
+  ipcMain.handle('spotify:play', (_e, query) => spotify.play(query));
+  ipcMain.handle('spotify:queue', (_e, query) => spotify.queue(query));
+  ipcMain.on('spotify:page', () => spotify.openDashboard());
   // typing to her: the overlay takes the keyboard while the chat is open, and gives it back after
   ipcMain.on('overlay:focus', (_e, on) => {
     if (!overlay) return;

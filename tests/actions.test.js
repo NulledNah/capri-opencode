@@ -38,9 +38,13 @@ test('Italian verbs open, close and control music', async () => {
     'metti Run the Jewels su Spotify',
     'riproduci Daft Punk su Spotify',
     'ascolta i Maneskin su Spotify',
+    'riproduci Daft Punk',
   ]) {
     assert.equal(chat.asked(text)?.kind, 'music', text);
   }
+
+  assert.deepEqual(chat.asked('aggiungi Run the Jewels alla coda'), { kind: 'queue', song: 'Run the Jewels' });
+  assert.deepEqual(chat.asked('metti Daft Punk in coda'), { kind: 'queue', song: 'Daft Punk' });
 
   assert.equal(chat.asked('aprile'), null); // "apri" is not a prefix match
   assert.equal(chat.asked('chiacchiero'), null); // nor is "chiudi"

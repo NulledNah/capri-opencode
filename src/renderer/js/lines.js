@@ -427,6 +427,23 @@ export const LINES = {
       freeBtn: 'Open the window',
       freeOpened: 'Window open.',
       freeOpenedHow: 'Pick a model in it. As soon as {name} does something, I’ll tell you.',
+      spotify: {
+        line: 'To play or queue on Spotify I need your app’s Client ID.',
+        how: 'Create a free app on developer.spotify.com, add this Redirect URI: {redirect}. Then paste the Client ID here. Spotify Premium is needed to play or queue.',
+        placeholder: 'Spotify Client ID…',
+        tag: 'SPOTIFY',
+        note: 'It stays on this PC.',
+        site: 'developer.spotify.com',
+        waiting: 'Spotify is opening in your browser… log in and approve.',
+        done: 'Spotify connected: {name}.',
+        failed: 'I couldn’t connect Spotify:',
+        playing: 'Playing {song}.',
+        queued: 'Queued: {song}.',
+        notConnected: 'Spotify isn’t connected: right-click me › Spotify › Connect.',
+        premium: 'Spotify Premium is needed to start playback or queue.',
+        noDevice: 'Open Spotify and start something once, then try again.',
+        playFailed: 'Spotify didn’t start the music: {error}',
+      },
     },
     // making her yours (custom.js), and "call me Max", "remember that…" in her chat
     custom: {
@@ -1357,6 +1374,9 @@ function overlay(base, extra) {
   }
   return base;
 }
+// New settings land in English first: every other language falls back until translated.
+for (const [lang, table] of Object.entries(LINES)) if (lang !== 'en') fillMissing(table, LINES.en);
+
 if (LINES.it) {
   const it = fillMissing(LINES.it, LINES.en);
   overlay(it, {
@@ -1444,6 +1464,23 @@ if (LINES.it) {
       freeBtn: 'Apri la finestra',
       freeOpened: 'Finestra aperta.',
       freeOpenedHow: 'Scegli un modello. Appena {name} fa qualcosa, te lo dico.',
+      spotify: {
+        line: 'Per riprodurre o accodare su Spotify mi serve il Client ID della tua app.',
+        how: 'Crea un’app gratis su developer.spotify.com, aggiungi come Redirect URI {redirect}, poi incolla qui il Client ID. Per play e coda serve Spotify Premium.',
+        placeholder: 'Client ID di Spotify…',
+        tag: 'SPOTIFY',
+        note: 'Resta su questo PC.',
+        site: 'developer.spotify.com',
+        waiting: 'Spotify si apre nel browser… accedi e autorizza.',
+        done: 'Spotify collegato: {name}.',
+        failed: 'Non sono riuscita a collegare Spotify:',
+        playing: 'Riproduco {song}.',
+        queued: 'In coda: {song}.',
+        notConnected: 'Spotify non è collegato: tasto destro su di me › Spotify › Collega.',
+        premium: 'Spotify Premium serve per avviare la riproduzione o accodare.',
+        noDevice: 'Apri Spotify e avvia qualcosa una volta, poi riprova.',
+        playFailed: 'Spotify non ha fatto partire la musica: {error}',
+      },
     },
     custom: {
       name: 'Come ti chiamo?',

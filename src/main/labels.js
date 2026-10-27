@@ -124,6 +124,19 @@ Object.assign(TRAY.it, {
   hooksRemove: 'Rimuovi gli hook di Claude Code',
 });
 
+// Spotify in the tray: brand, connect, change the Client ID, disconnect.
+const SPOTIFY = {
+  fr: ['Spotify', 'Connecter Spotify…', 'Changer le Client ID…', 'Déconnecter Spotify'],
+  en: ['Spotify', 'Connect Spotify…', 'Change Client ID…', 'Disconnect Spotify'],
+  it: ['Spotify', 'Collega Spotify…', 'Cambia Client ID…', 'Scollega Spotify'],
+  es: ['Spotify', 'Conectar Spotify…', 'Cambiar Client ID…', 'Desconectar Spotify'],
+  pt: ['Spotify', 'Conectar o Spotify…', 'Mudar o Client ID…', 'Desconectar o Spotify'],
+  ru: ['Spotify', 'Подключить Spotify…', 'Изменить Client ID…', 'Отключить Spotify'],
+};
+for (const [lang, [brand, connect, client, disconnect]] of Object.entries(SPOTIFY)) {
+  if (TRAY[lang]) Object.assign(TRAY[lang], { spotify: brand, spotifyConnect: connect, spotifyClient: client, spotifyDisconnect: disconnect });
+}
+
 // Her OpenCode integration is a plugin, not hooks: the tray says so when it is the one watched.
 const PLUGIN = {
   fr: ['Plugin OpenCode : installé', 'Installer le plugin OpenCode', 'Retirer le plugin OpenCode'],

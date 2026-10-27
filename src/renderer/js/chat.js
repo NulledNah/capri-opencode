@@ -25,7 +25,7 @@ const CLOSE_TAG = /\[\[\s*close\s*:?\s*([^\]]*)\]\]/i; // [[close: AM Music]] at
 // "close", "shut down", "ferme", "quitte", "cierra", "fecha", "закрой"... in any of her languages
 const CLOSE_ASK = /\b(close|shut|quit|kill|exit)\b|ferm|quitt|coupe|arr[êe]t|cierr|cerra|fech|\bchiud(?:i|ere|erlo|erla|ilo|ila)\b|\btermina(?:re|lo|la)?\b|закр|выключ/i;
 // her other tags: [[open: Spotify]], [[music: Bad Bunny]], [[media: next]], [[site: youtube.com]]
-const TAG = /\[\[\s*(open|music|media|site)\s*:\s*([^\]]*)\]\]/i;
+const TAG = /\[\[\s*(open|music|queue|media|site)\s*:\s*([^\]]*)\]\]/i;
 // "open", "launch", "ouvre", "lance", "abre", "открой"... in any of her languages
 const OPEN_ASK = /\b(open|launch|start|run)\b|ouvr|lance|démarre|abre|abrir|inicia|ejecuta|executa|\bapri(?:re|mi)?\b|\bavvia(?:re|rla)?\b|\blancia(?:re|la)?\b|\bfa(?:i|mmi) partire\b|открой|запусти/i;
 // what to do with the music playing, said plainly (only when it's about music, or said in a few words)
@@ -41,6 +41,11 @@ const MEDIA_ASK = [
 const MUSIC_WORD = /musi|chanson|song|track|titre|morceau|spotify|canzon|brano|faixa|песн|музык|трек/i;
 // "put X on Spotify", "mets X sur Spotify", "pon X en Spotify", "coloca X no Spotify", "включи X в Spotify"
 const SPOTIFY_ASK = /(?:play|put on|put|mets|joue|lance|écoute|pon|toca|reproduce|coloca|toque|metti|riproduci|ascolta|включи|поставь)\s+(?:moi\s+|me\s+|un po' di\s+)?(.+?)\s+(?:on|sur|en|no|na|su|sullo|sulla|в)\s+spotify/i;
+// "queue X", "add X to the queue", "aggiungi X alla coda", "mets X dans la file"
+const QUEUE_WORD = /\b(queue|coda|file d'attente|cola|fila|очеред)/i;
+const QUEUE_ASK = /^(?:capri,?\s+)?(?:aggiungi|metti|accoda|add|ajoute|met[ts]|agrega|adiciona|добавь)\s+(.+?)\s+(?:in coda|alla coda|nella coda|to the (?:queue|line)|à la file|a la cola|na fila|в очередь)/i;
+// "riproduci X", "ascolta X": play it on Spotify, no need to name the service
+const PLAY_ASK = /^(?:capri,?\s+)?(?:riproduci|ascolta|fammi ascoltare)\s+(.+)$/i;
 const MEDIA_ACTIONS = new Set(MEDIA_ASK.map(([action]) => action));
 // what her tag needs to find in your message before it does anything: a small model tags answers about
 // anything ("[[music: synthwave]]" under a film tip), and music and the media keys act right away
@@ -248,7 +253,9 @@ export class Chat {
     if (memo) return { kind: 'memo', text: memo };
     const media = MEDIA_ASK.find(([, re]) => re.test(text))?.[0];
     if (media && (count <= 5 || MUSIC_WORD.test(text))) return { kind: 'media', action: media };
-    const song = SPOTIFY_ASK.exec(text)?.[1];
+    const queue = QUEUE_ASK.exec(text)?.[1]?.trim();
+    if (queue) return { kind: 'queue', song: queue };
+    const song = SPOTIFY_ASK.exec(text)?.[1] || PLAY_ASK.exec(text)?.[1];
     if (song) return { kind: 'music', song };
     const app = this.askedToClose(text);
     if (app) return { kind: 'close', name: app };
@@ -274,10 +281,8 @@ export class Chat {
       this.capri.pulse();
       return (await this.host.media(asked.action)) ? { line: t.media[asked.action], face: 'smug' } : null;
     }
-    if (asked.kind === 'music') {
-      this.zap();
-      return (await this.host.music(asked.song)) ? { line: fmt(t.music, { song: asked.song }), face: 'laugh' } : null;
-    }
+    if (asked.kind === 'music') return this.playSong(asked.song);
+    if (asked.kind === 'queue') return this.queueSong(asked.song);
     const item = await this.host.findLaunch(asked.text);
     const site = namedSite(asked.text);
     if (site && (!item || BROWSER.test(item.name))) {
@@ -306,6 +311,11 @@ export class Chat {
     const value = tag[2].trim();
     if (!value || !wanted(kind, text)) return undefined;
     if (kind === 'media') return MEDIA_ACTIONS.has(value.toLowerCase()) ? this.media(value.toLowerCase(), answer) : undefined;
+    if (kind === 'queue') {
+      const done = await this.queueSong(value);
+      if (done) this.addLine(answer, done.line, done.face);
+      return;
+    }
     if (kind === 'music') return this.music(value, answer);
     if (kind === 'site') return this.offerSite(value, answer);
     const item = await this.host.findLaunch(value);
@@ -351,11 +361,39 @@ export class Chat {
     if (ok) this.addLine(answer, this.t.media[action], 'smug');
   }
 
-  // A Spotify search, in the app if it's there.
+  // A Spotify search, in the app if it's there (the fallback when Spotify isn't connected).
   async music(song, answer) {
+    const done = await this.playSong(song);
+    if (done) this.addLine(answer, done.line, done.face);
+  }
+
+  // Spotify: play a track, or add it to the queue. Without OAuth, fall back to a search for play.
+  trackLine(track) {
+    return track.artist ? `${track.name} — ${track.artist}` : track.name;
+  }
+
+  spotifyError(res) {
+    const s = this.t.setup.spotify;
+    const known = { premium: s.premium, no_device: s.noDevice, not_connected: s.notConnected, noclient: s.notConnected };
+    return known[res.code] || fmt(s.playFailed, { error: res.error || '' });
+  }
+
+  async playSong(song) {
     this.zap();
-    const ok = await this.host.music(song);
-    if (ok) this.addLine(answer, fmt(this.t.music, { song }), 'laugh');
+    const res = await this.host.spotifyPlay(song);
+    if (res.ok) return { line: fmt(this.t.setup.spotify.playing, { song: this.trackLine(res.track) }), face: 'laugh' };
+    if (res.code === 'not_connected' || res.code === 'noclient') {
+      if (!(await this.host.music(song))) return null;
+      return { line: `${fmt(this.t.music, { song })} ${this.t.setup.spotify.notConnected}`, face: 'laugh' };
+    }
+    return { line: this.spotifyError(res), face: 'aside' };
+  }
+
+  async queueSong(song) {
+    this.zap();
+    const res = await this.host.spotifyQueue(song);
+    if (res.ok) return { line: fmt(this.t.setup.spotify.queued, { song: this.trackLine(res.track) }), face: 'laugh' };
+    return { line: this.spotifyError(res), face: 'aside' };
   }
 
   // A website: always behind a button that shows where it goes.
@@ -435,7 +473,7 @@ export class Chat {
   // What she can do on the PC when you ask (Windows), and nothing else.
   powers() {
     const lines = [
-      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, control the music playing, or open a website: say in a few words that you will, and end your answer with one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[media: ACTION]] (ACTION: pause, play, next, previous, volup, voldown or mute), or [[site: ADDRESS]]. Some of these get a button to confirm, so never say it is already done. Any other time, write no tag at all: there are no other tags.',
+      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: say in a few words that you will, and end your answer with one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, volup, voldown or mute), or [[site: ADDRESS]]. Some of these get a button to confirm, so never say it is already done. Any other time, write no tag at all: there are no other tags.',
     ];
     if (this.apps.length) {
       const open = this.apps.map(({ name, label }) => (label && label !== name ? `${name} (${label})` : name)).join(', ');
@@ -512,6 +550,7 @@ function wanted(kind, text) {
   const music = MUSIC_WORD.test(text) || LISTEN.test(text);
   if (kind === 'music') return music;
   if (kind === 'media') return music || SOUND.test(text) || MEDIA_ASK.some(([, re]) => re.test(text));
+  if (kind === 'queue') return QUEUE_WORD.test(text);
   if (kind === 'site') return OPEN_ASK.test(text) || SITE.test(text);
   if (kind === 'close') return CLOSE_ASK.test(text);
   return OPEN_ASK.test(text) || PLAY.test(text); // an app, or a game to play

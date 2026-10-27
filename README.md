@@ -71,6 +71,19 @@ Or run `integrations/opencode/install.bat`.
 Subagent sessions are ignored so they don't double-count or celebrate early.
 Esc (aborted run) is not treated as a crash.
 
+## Spotify (play and queue)
+
+Her chat can play a track or add it to the Spotify queue. One-time setup:
+
+1. Create a free app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard).
+2. Add this Redirect URI, exactly: `http://127.0.0.1:47824/spotify/callback`.
+3. In her tray menu: **Spotify › Change Client ID…** and paste the app's Client ID.
+4. **Spotify › Connect Spotify…** and approve in the browser.
+
+Playback and queue control need **Spotify Premium**; without it she falls back to opening the
+Spotify search. The tokens stay encrypted on this PC with your Windows account. Port `47824` must
+be free while connecting.
+
 ## Local control API
 
 The bridge also exposes a small local API used by the OpenCode desktop panel

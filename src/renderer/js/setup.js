@@ -48,9 +48,49 @@ export class Setup {
     if (ready) this.onReady?.();
   }
 
+  // Spotify: one OAuth login, then her chat can play and queue.
+  async spotify() {
+    await this.guide.scene(async () => {
+      const st = await this.host.spotifyStatus();
+      if (!st.clientId && !(await this.spotifyClient())) return;
+      this.working(this.t.spotify.waiting);
+      const res = await this.host.spotifyConnect();
+      if (!res.ok) return this.fail(this.t.spotify.failed, res.error);
+      this.voice.play('hello');
+      this.capri.perform('hop');
+      const done = fmt(this.t.spotify.done, { name: res.name || 'Spotify' });
+      await this.guide.ask({
+        kind: 'done', face: 'laugh',
+        line: res.product && res.product !== 'premium' ? `${done} ${this.t.spotify.premium}` : done,
+        actions: [{ id: 'ok', label: this.t.ok, primary: true }],
+      });
+    });
+  }
+
+  // The Client ID of your Spotify developer app, kept in her config.
+  async spotifyClient() {
+    const st = await this.host.spotifyStatus();
+    const got = await this.guide.askText({
+      face: 'look',
+      line: this.t.spotify.line,
+      quote: fmt(this.t.spotify.how, { redirect: st.redirect }),
+      placeholder: this.t.spotify.placeholder,
+      tag: this.t.spotify.tag,
+      note: this.t.spotify.note,
+      actions: [{ id: 'page', label: this.t.spotify.site }],
+      onAction: (id) => id === 'page' && (this.host.spotifyPage(), true),
+    });
+    if (!got?.text) return false;
+    const res = await this.host.spotifyClient(got.text.trim());
+    if (!res.ok) {
+      await this.fail(this.t.spotify.failed, res.error);
+      return false;
+    }
+    return true;
+  }
+
   // A bigger model than the tiny one her chat is on: picked, fetched, and her chat back on it.
-  async better() {
-    let ready = false;
+  async better() {    let ready = false;
     await this.guide.scene(async () => {
       if (!(await this.ollamaUp())) return;
       const name = await this.pickModel(this.t.bigger);

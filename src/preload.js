@@ -55,5 +55,12 @@ contextBridge.exposeInMainWorld('host', {
   media: (action) => ipcRenderer.invoke('apps:media', action),
   music: (query) => ipcRenderer.invoke('apps:music', query),
   openSite: (address) => ipcRenderer.invoke('apps:site', address),
+  spotifyStatus: () => ipcRenderer.invoke('spotify:status'),
+  spotifyClient: (id) => ipcRenderer.invoke('spotify:client', id),
+  spotifyConnect: () => ipcRenderer.invoke('spotify:connect'),
+  spotifyDisconnect: () => ipcRenderer.invoke('spotify:disconnect'),
+  spotifyPlay: (query) => ipcRenderer.invoke('spotify:play', query),
+  spotifyQueue: (query) => ipcRenderer.invoke('spotify:queue', query),
+  spotifyPage: () => ipcRenderer.send('spotify:page'),
   focusOverlay: (on) => ipcRenderer.send('overlay:focus', Boolean(on)),
 });
