@@ -226,7 +226,6 @@ export const LINES = {
       menu: 'Clic droit sur moi pour mon menu. Ctrl+Alt+C pour me ranger.',
       connectBtn: 'Me brancher', later: 'Plus tard', whatClaude: 'C’est quoi Claude Code ?', justHang: 'Juste traîner', ok: 'Compris',
       connected: 'Branchée !',
-      pending: 'OpenCode n’a pas encore chargé mon plugin.',
       restart: 'Maintenant ferme complètement Claude Code et rouvre-le (une nouvelle session). Dès qu’il fait quelque chose, je te le dis.',
       linked: 'Je vois Claude ! On est connectés.',
       ready: 'Je suis branchée sur Claude Code.',
@@ -378,10 +377,10 @@ export const LINES = {
       },
       folder: {
         line: 'This is Claude’s folder: {dir}',
-        what: 'opencode.json holds its settings. My plugin lives in plugins/capri-opencode.js: that’s what tells me every action.',
-        empty: 'No opencode.json yet: it shows up the first time you save settings.',
+        what: 'settings.json holds its settings. That’s where my hook lives: a tiny command Claude runs on every action to let me know.',
+        empty: 'No settings.json yet: it shows up when you plug me in.',
         hook: 'No need to touch it by hand.',
-        hookHow: 'To unplug me: right-click me › “Remove OpenCode plugin”. I only copy my own file in and out.',
+        hookHow: 'To unplug me: right-click me › “Remove Claude Code hooks”. The .capri-backup files are copies made before I touched it.',
         missing: 'No Claude folder on this PC.',
         missingHow: 'It shows up once Claude Code is installed and has run once. Then I can plug in.',
       },
@@ -457,17 +456,16 @@ export const LINES = {
       hi: 'Hey, I’m Capri.',
       alone: 'No Claude Code here, no work: I’ll just hang out on your desktop with you.',
       about: 'I live on your desktop and react to what Claude Code does on this PC. Without it, I just hang out here, and that’s fine too.',
-      connect: 'Want me to plug into OpenCode? One click, then restart OpenCode.',
-      noClaude: 'I can’t find OpenCode on this PC. Without it, I’ll just hang out and live my life.',
+      connect: 'Want me to plug into Claude Code? One click, then close Claude Code completely and open it again.',
+      noClaude: 'I can’t find Claude Code on this PC (it needs a Claude subscription). Without it, I’ll just hang out and live my life.',
       menu: 'Right-click me for my menu. Ctrl+Alt+C tucks me away.',
       connectBtn: 'Plug me in', later: 'Later', whatClaude: 'What’s Claude Code?', justHang: 'Just hang out', ok: 'Got it',
       connected: 'Plugged in!',
-      pending: 'OpenCode hasn’t loaded my plugin yet.',
-      restart: 'Now restart OpenCode: it loads plugins at startup. As soon as it does something, I’ll tell you.',
+      restart: 'Now close Claude Code completely and open it again (a new session). As soon as it does something, I’ll tell you.',
       linked: 'I can see Claude! We’re linked.',
       ready: 'I’m plugged into Claude Code.',
       readyHow: 'Whenever it works, I’ll show you what it’s doing. Right-click me for my menu. Ctrl+Alt+C tucks me away.',
-      afterInstall: 'Once it’s installed, right-click me › “Install OpenCode plugin”.',
+      afterInstall: 'Once you have it, right-click me › “Install Claude Code hooks”.',
       failed: 'I couldn’t plug in: {error}',
     },
     online: ['Capri online.', 'Back on your desktop, choom.'],
@@ -477,9 +475,9 @@ export const LINES = {
     last: 'Last action: {action}',
     sessions: '{count} active sessions',
     units: { action: ['action', 'actions'], file: ['file changed', 'files changed'] },
-    hooksOk: 'Plugin installed. Restart OpenCode and I’ll see everything.',
-    hooksRemoved: 'Plugin removed. I can’t see OpenCode anymore.',
-    hooksFail: 'Couldn’t change the plugin: {error}',
+    hooksOk: 'Hooks installed. Restart Claude Code and I’ll see everything.',
+    hooksRemoved: 'Hooks removed. I can’t see Claude anymore.',
+    hooksFail: 'Couldn’t change the hooks: {error}',
     verbs: {
       Read: 'Reads', Write: 'Writes', Edit: 'Edits', MultiEdit: 'Edits', NotebookEdit: 'Edits',
       Bash: 'Runs', PowerShell: 'Runs', Grep: 'Greps', Glob: 'Scans', WebFetch: 'Fetches',
@@ -497,28 +495,28 @@ export const LINES = {
     ],
     resume: ['Di nuovo su {project}. Non ho dimenticato niente.', 'Sessione ripresa. Ripartiamo da dove eravamo.'],
     prompt: [
-      'Nuovo incarico. OpenCode ci sta lavorando.',
-      'Ricevuto. Tengo d’occhio OpenCode.',
+      'Nuovo incarico. Claude ci sta lavorando.',
+      'Ricevuto. Tengo d’occhio Claude.',
       'Ok, andiamo.',
       'Incarico accettato. Ti aggiorno.',
     ],
     working: [
       'Avanti. {count} azioni finora.',
-      'OpenCode sta macinando. Io conto: {count}.',
+      'Claude sta macinando. Io conto: {count}.',
       'Ancora sotto. {count} azioni sul cronometro.',
     ],
     done: [
       'Fatto! Che roba preem.',
       'Incarico completato, choom.',
-      'OpenCode ha finito. Puoi tornare.',
+      'Claude ha finito. Puoi tornare.',
       'Consegnato. Piuttosto nova, eh?',
       'Finito. Noi tutte a guardare, niente fuori posto.',
     ],
-    permission: ['Ehi! OpenCode ha bisogno del tuo permesso.', 'Choom, devi approvare una cosa.', 'Aspetto il tuo via libera.'],
-    waiting: ['OpenCode aspetta la tua risposta.', 'Tocca a te, choom.'],
-    error: ['Ahia. {tool} è crashato.', '{tool} è andato flatline. OpenCode riproverà.', '{tool} ha fallito. Niente di grave… credo.'],
+    permission: ['Ehi! Claude ha bisogno del tuo permesso.', 'Choom, devi approvare una cosa.', 'Aspetto il tuo via libera.'],
+    waiting: ['Claude aspetta la tua risposta.', 'Tocca a te, choom.'],
+    error: ['Ahia. {tool} è crashato.', '{tool} è andato flatline. Claude riproverà.', '{tool} ha fallito. Niente di grave… credo.'],
     interrupted: ['Interrotto. Cambio di piani?', 'Tagliato. Resto qui.'],
-    crashed: ['OpenCode si è fermato a metà.', 'Crash brutto. OpenCode non ha potuto finire.'],
+    crashed: ['Claude si è fermato a metà.', 'Crash brutto. Claude non ha potuto finire.'],
     subagentStart: ['Sottagente {agent} schierato.'],
     subagentStop: ['Il sottagente {agent} è tornato.'],
     someTool: 'Lo strumento', someAgent: 'agente',
@@ -551,7 +549,7 @@ export const LINES = {
       prompts: ['prompt', 'prompt'], approvals: ['approvazione', 'approvazioni'], projects: ['progetto', 'progetti'],
       copy: 'Copia immagine', copied: 'Copiato ✓', copyFailed: 'Copia fallita', close: 'Chiudi',
       lines: {
-        none: ['Niente sul diario oggi. Notte tranquilla.', 'Diario vuoto. OpenCode si è preso il giorno libero.'],
+        none: ['Niente sul diario oggi. Notte tranquilla.', 'Diario vuoto. Claude si è preso il giorno libero.'],
         light: ['Giornata leggera. Va bene.', 'Turno corto. Ecco il diario.'],
         good: ['Niente male, choom. Ecco la tua giornata.', 'Il diario di oggi. Piuttosto nova.'],
         big: ['Giornata piena. Night City non andava così veloce.', 'Guarda. Oggi eravamo in fiamme.'],
@@ -559,15 +557,15 @@ export const LINES = {
     },
     thinking: {
       verb: 'Pensa',
-      hmm: ['Momento di gran cervello.', 'OpenCode ci sta pensando. Anch’io.', 'Ancora a pensare. Non è bloccato, promesso.'],
-      long: ['Questa sta prendendo tempo.', 'Pensiero lungo. OpenCode mastica qualcosa di grosso.'],
+      hmm: ['Momento di gran cervello.', 'Claude ci sta pensando. Anch’io.', 'Ancora a pensare. Non è bloccato, promesso.'],
+      long: ['Questa sta prendendo tempo.', 'Pensiero lungo. Claude mastica qualcosa di grosso.'],
       longHow: 'Niente è bloccato: sto contando. Con un modello locale (Ollama) può volerci qualche minuto.',
     },
     bye: ['Sessione {project} chiusa. Ci vediamo.', 'Disconnessa. Resto in giro.'],
     idle: ['Niente in corso. Solo fluttuo.', 'Nessun incarico. Un po’ annoiata.', 'Notte tranquilla sulla Rete.'],
     gaze: ['Vedi quella stella?', 'Il satellite è ancora lassù.', 'Shh. Sto guardando.'],
     uplink: ['Un giorno arriverò lassù.', 'Pensi che ce la potremmo fare, lassù?', 'Ha risposto. Hai visto?'],
-    reply: ['OpenCode ha risposto:', 'Ecco cosa ha detto OpenCode:', 'Messaggio da OpenCode:'],
+    reply: ['Claude ha risposto:', 'Ecco cosa ha detto Claude:', 'Messaggio da Claude:'],
     showcase: {
       minds: 'C’è folla qui dentro.',
       zap: 'Io? Una minaccia?',
@@ -578,59 +576,59 @@ export const LINES = {
     },
     guide: {
       ok: 'Capito', next: 'Avanti', more: 'Fammi vedere in giro',
-      labels: { icon: 'LA MIA ICONA', claude: 'OPENCODE' },
-      permissionThere: 'È nella finestra di OpenCode, dove sto indicando.',
+      labels: { icon: 'LA MIA ICONA', claude: 'CLAUDE' },
+      permissionThere: 'È nella finestra di Claude, dove sto indicando.',
       menu: { line: 'Cosa ti mostro?', quote: 'Scegline uno, ti ci porto.' },
-      topics: { connect: 'Collegami a OpenCode', icon: 'Dov’è la mia icona?', claude: 'Dov’è OpenCode?', folder: 'La cartella di OpenCode', close: 'Niente, grazie' },
+      topics: { connect: 'Collegami a Claude', icon: 'Dov’è la mia icona?', claude: 'Dov’è Claude?', folder: 'La cartella di Claude', close: 'Niente, grazie' },
       icon: {
         line: 'La mia icona è lì, vicino all’orologio.',
         quote: 'Cliccala: è il mio menu. Il tasto destro su di me fa lo stesso.',
         hidden: 'Windows spesso la nasconde dietro il ^ vicino all’orologio: clicca quello, sono lì. Oppure clicca col destro su di me: stesso menu.',
       },
       claude: {
-        there: 'OpenCode è quella finestra lì.',
+        there: 'Claude è quella finestra lì.',
         thereHow: 'È quella dove hai scritto l’ultimo prompt. Quando chiede un permesso, è lì che rispondi.',
         unknown: 'Non so ancora dov’è.',
-        unknownHow: 'Mandagli un prompt: la finestra dove scrivi è quella di OpenCode. Dopo posso mostrartela.',
+        unknownHow: 'Mandagli un prompt: la finestra dove scrivi è quella di Claude. Dopo posso mostrartela.',
         behind: 'È dietro le altre finestre.',
         behindHow: 'È la finestra dove hai scritto l’ultimo prompt. Portala davanti e te la mostro.',
       },
       folder: {
-        line: 'Questa è la cartella di OpenCode: {dir}',
-        what: 'opencode.json contiene le sue impostazioni. Il mio plugin sta in plugins/capri-opencode.js: è quello che mi racconta ogni azione.',
-        empty: 'Ancora nessun opencode.json: compare la prima volta che salvi le impostazioni.',
+        line: 'Questa è la cartella di Claude: {dir}',
+        what: 'settings.json contiene le sue impostazioni. È lì che vive il mio hook: un piccolo comando che Claude lancia a ogni azione per farmi sapere.',
+        empty: 'Ancora nessun settings.json: compare la prima volta che salvi le impostazioni.',
         hook: 'Non serve toccarlo a mano.',
-        hookHow: 'Per scollegarmi: tasto destro su di me › “Rimuovi il plugin OpenCode”. Io copio e tolgo solo il mio file.',
-        missing: 'Nessuna cartella OpenCode su questo PC.',
-        missingHow: 'Compare quando OpenCode è installato ed è stato avviato una volta. Poi posso collegarmi.',
+        hookHow: 'Per scollegarmi: tasto destro su di me › “Rimuovi gli hook Claude Code”. I file .capri-backup sono copie fatte prima che ci mettessi mano.',
+        missing: 'Nessuna cartella Claude su questo PC.',
+        missingHow: 'Compare quando Claude è installato ed è stato avviato una volta. Poi posso collegarmi.',
       },
     },
     welcome: {
       hi: 'Ehi, sono Capri.',
-      alone: 'Niente OpenCode qui, niente lavoro: me ne sto sul tuo desktop con te.',
-      about: 'Vivo sul tuo desktop e reagisco a quello che fa OpenCode su questo PC. Senza, me ne sto qui, e va benissimo.',
-      connect: 'Vuoi che mi colleghi a OpenCode? Un clic, poi riavvia OpenCode.',
-      noClaude: 'Non trovo OpenCode su questo PC. Senza, me ne sto in giro e vivo la mia vita.',
+      alone: 'Niente Claude qui, niente lavoro: me ne sto sul tuo desktop con te.',
+      about: 'Vivo sul tuo desktop e reagisco a quello che fa Claude su questo PC. Senza, me ne sto qui, e va benissimo.',
+      connect: 'Vuoi che mi colleghi a Claude? Un clic, poi riavvia Claude.',
+      noClaude: 'Non trovo Claude su questo PC. Senza, me ne sto in giro e vivo la mia vita.',
       menu: 'Tasto destro su di me per il menu. Ctrl+Alt+C mi mette via.',
-      connectBtn: 'Collegami', later: 'Più tardi', whatClaude: 'Cos’è OpenCode?', justHang: 'Sto solo in giro', ok: 'Capito',
+      connectBtn: 'Collegami', later: 'Più tardi', whatClaude: 'Cos’è Claude?', justHang: 'Sto solo in giro', ok: 'Capito',
       connected: 'Collegata!',
-      pending: 'OpenCode non ha ancora caricato il mio plugin.',
-      restart: 'Ora riavvia OpenCode: carica i plugin all’avvio. Appena fa qualcosa, te lo dico.',
-      linked: 'Vedo OpenCode! Siamo collegate.',
-      ready: 'Sono collegata a OpenCode.',
+      pending: 'Claude non ha ancora caricato il mio plugin.',
+      restart: 'Ora riavvia Claude: carica gli hook all’avvio. Appena fa qualcosa, te lo dico.',
+      linked: 'Vedo Claude! Siamo collegate.',
+      ready: 'Sono collegata a Claude.',
       readyHow: 'Quando lavora, ti mostro cosa sta facendo. Tasto destro su di me per il menu. Ctrl+Alt+C mi mette via.',
-      afterInstall: 'Quando è installato, tasto destro su di me › “Installa il plugin OpenCode”.',
+      afterInstall: 'Quando è installato, tasto destro su di me › “Installa gli hook Claude Code”.',
       failed: 'Non sono riuscita a collegarmi: {error}',
     },
     online: ['Capri online.', 'Di nuovo sul tuo desktop, choom.'],
     motion: { line: 'Windows ha le animazioni disattivate, quindi mi muovo appena.', quote: 'Vuoi che mi muova lo stesso? Puoi cambiarlo dopo nel mio menu › Animazioni.', full: 'Muoviti!', still: 'Stai calma' },
-    status: 'OpenCode lavora su {project} da {time}.',
+    status: 'Claude lavora su {project} da {time}.',
     last: 'Ultima azione: {action}',
     sessions: '{count} sessioni attive',
     units: { action: ['azione', 'azioni'], file: ['file modificato', 'file modificati'] },
-    hooksOk: 'Plugin installato. Riavvia OpenCode e vedrò tutto.',
-    hooksRemoved: 'Plugin rimosso. Non vedo più OpenCode.',
-    hooksFail: 'Non ho potuto cambiare il plugin: {error}',
+    hooksOk: 'Hook installati. Riavvia Claude e vedrò tutto.',
+    hooksRemoved: 'Hook rimossi. Non vedo più Claude.',
+    hooksFail: 'Non ho potuto cambiare gli hook: {error}',
     verbs: {
       Read: 'Legge', Write: 'Scrive', Edit: 'Modifica', MultiEdit: 'Modifica', NotebookEdit: 'Modifica',
       Bash: 'Esegue', PowerShell: 'Esegue', Grep: 'Cerca', Glob: 'Scansiona', WebFetch: 'Scarica',
@@ -845,7 +843,6 @@ export const LINES = {
       menu: 'Clic derecho sobre mí para abrir mi menú. Ctrl+Alt+C me guarda.',
       connectBtn: 'Conectarme', later: 'Más tarde', whatClaude: '¿Qué es Claude Code?', justHang: 'Solo pasear', ok: 'Entendido',
       connected: '¡Conectada!',
-      pending: 'OpenCode todavía no ha cargado mi plugin.',
       restart: 'Ahora cierra Claude Code por completo y vuelve a abrirlo (una sesión nueva). En cuanto haga algo, te aviso.',
       linked: '¡Veo a Claude! Estamos conectados.',
       ready: 'Estoy conectada a Claude Code.',
@@ -1079,7 +1076,6 @@ export const LINES = {
       menu: 'Clique com o botão direito em mim para abrir meu menu. Ctrl+Alt+C me guarda.',
       connectBtn: 'Me conectar', later: 'Depois', whatClaude: 'O que é o Claude Code?', justHang: 'Só ficar de boa', ok: 'Entendi',
       connected: 'Conectada!',
-      pending: 'O OpenCode ainda não carregou meu plugin.',
       restart: 'Agora feche o Claude Code completamente e abra de novo (uma sessão nova). Assim que ele fizer algo, eu te aviso.',
       linked: 'Tô vendo o Claude! Estamos conectados.',
       ready: 'Tô conectada ao Claude Code.',
@@ -1315,7 +1311,6 @@ export const LINES = {
       menu: 'Правый клик по мне — моё меню. Ctrl+Alt+C — спрятать меня.',
       connectBtn: 'Подключить', later: 'Позже', whatClaude: 'Что такое Claude Code?', justHang: 'Просто тусоваться', ok: 'Понятно',
       connected: 'Подключено!',
-      pending: 'OpenCode ещё не загрузил мой плагин.',
       restart: 'Теперь полностью закрой Claude Code и открой снова (новая сессия). Как только он что-то сделает, я скажу.',
       linked: 'Я вижу Claude! Мы на связи.',
       ready: 'Я подключена к Claude Code.',
@@ -1345,9 +1340,34 @@ export const LINES = {
   },
 };
 
+// This fork's Italian table predates upstream's newer chat and setup keys: fill them from English.
+function fillMissing(small, full) {
+  if (!small || typeof small !== 'object' || Array.isArray(small)) return small;
+  for (const [key, value] of Object.entries(full)) {
+    if (!(key in small)) small[key] = value;
+    else if (value && typeof value === 'object' && !Array.isArray(value)) fillMissing(small[key], value);
+  }
+  return small;
+}
+if (LINES.it) {
+  fillMissing(LINES.it, LINES.en);
+  LINES.it.labels = { icon: 'LA MIA ICONA', claude: 'CLAUDE' };
+}
+
+// Installed but not loaded yet: the assistant only picks her integration up when it restarts.
+const PENDING = {
+  fr: 'Claude Code n’a pas encore chargé mon intégration.',
+  en: 'Claude Code hasn’t loaded my integration yet.',
+  it: 'Claude Code non ha ancora caricato la mia integrazione.',
+  es: 'Claude Code todavía no ha cargado mi integración.',
+  pt: 'O Claude Code ainda não carregou minha integração.',
+  ru: 'Claude Code ещё не загрузил мою интеграцию.',
+};
+for (const [lang, line] of Object.entries(PENDING)) if (LINES[lang]) LINES[lang].welcome.pending = line;
+
 // The coding assistants she can watch besides Claude Code: the same lines with their name, their
 // hooks file, and what to do once her hooks are in.
-export const ASSISTANT_NAMES = { claude: 'Claude Code', codex: 'Codex', agy: 'Antigravity' };
+export const ASSISTANT_NAMES = { claude: 'Claude Code', codex: 'Codex', agy: 'Antigravity', opencode: 'OpenCode' };
 const OTHERS = {
   codex: {
     name: 'Codex', file: 'hooks.json', dir: '.codex',
@@ -1382,6 +1402,25 @@ const OTHERS = {
       es: 'Ahora empieza una conversación nueva en Antigravity. En cuanto haga algo, te aviso.',
       pt: 'Agora comece uma conversa nova no Antigravity. Assim que ele fizer algo, eu te aviso.',
       ru: 'Теперь начни новый разговор в Antigravity. Как только он что-то сделает, я скажу.',
+    },
+  },
+  opencode: {
+    name: 'OpenCode', file: 'opencode.json', dir: '.config/opencode',
+    ask: {
+      en: 'Want me to plug into OpenCode? One click, then restart OpenCode.',
+      fr: 'Tu veux que je me branche sur OpenCode ? Un clic, puis relance OpenCode.',
+      it: 'Vuoi che mi colleghi a OpenCode? Un clic, poi riavvia OpenCode.',
+      es: '¿Quieres que me conecte a OpenCode? Un clic, y luego reinicia OpenCode.',
+      pt: 'Quer que eu me conecte ao OpenCode? Um clique, depois reinicie o OpenCode.',
+      ru: 'Хочешь, я подключусь к OpenCode? Один клик, потом перезапусти OpenCode.',
+    },
+    after: {
+      en: 'Now restart OpenCode. As soon as it does something, I’ll tell you.',
+      fr: 'Maintenant relance OpenCode. Dès qu’il fait quelque chose, je te le dis.',
+      it: 'Ora riavvia OpenCode. Appena fa qualcosa, te lo dico.',
+      es: 'Ahora reinicia OpenCode. En cuanto haga algo, te aviso.',
+      pt: 'Agora reinicie o OpenCode. Assim que ele fizer algo, eu te aviso.',
+      ru: 'Теперь перезапусти OpenCode. Как только он что-то сделает, я скажу.',
     },
   },
 };

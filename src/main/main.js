@@ -11,7 +11,7 @@ const {
 } = require('electron');
 
 const config = require('./config');
-const { TRAY, LANGS } = require('./labels');
+const { TRAY, LANGS, PLUGIN } = require('./labels');
 const { createBridge } = require('./bridge');
 const { startWindowWatch } = require('./windows');
 const llm = require('./llm');
@@ -19,13 +19,15 @@ const setup = require('./setup');
 const apps = require('./apps');
 const plugin = require('./plugin');
 const launch = require('./launch');
+const { ASSISTANTS, assistant } = require('./assistants');
+const activeAssistant = () => assistant(config.load().assistant);
+const activeHooks = () => activeAssistant().hooks;
 const demoSteps = require('../../scripts/demo-sequence');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const DEV = process.argv.includes('--dev');
 const PORT = Number(process.env.CAPRI_PORT) || 47823;
 const SOUND_EXT = /\.(mp3|wav|ogg|m4a)$/i;
-const OPENCODE_HELP = 'https://opencode.ai/docs/';
 const OLLAMA_SITE = 'https://ollama.com';
 
 protocol.registerSchemesAsPrivileged([
@@ -242,7 +244,17 @@ function resolveLang(setting) {
 // What the overlay gets: `lang` is the resolved one, `langSetting` what the user picked.
 function rendererConfig() {
   const { apiKeys, ...cfg } = config.load(); // the keys stay here: the overlay only learns which ones are set
-  return { ...cfg, keys: Object.keys(apiKeys || {}), assistant: 'claude', lang: resolveLang(cfg.lang), langSetting: cfg.lang, floorGap: overlayArea().gap };
+  return { ...cfg, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(cfg.lang), langSetting: cfg.lang, floorGap: overlayArea().gap };
+}
+
+// Where the watched assistant keeps its settings (her guide opens it).
+function assistantFolder() {
+  const watched = activeAssistant();
+  if (watched.folder) return watched.folder();
+  const file = watched.hooks.status().file;
+  const dir = path.dirname(file);
+  const hasSettings = fs.existsSync(file);
+  return { dir, file, hasSettings, label: hasSettings ? path.basename(file) : path.basename(dir) };
 }
 
 function updateConfig(patch) {
@@ -343,8 +355,16 @@ function controlPlugin(body) {
 function rebuildTray() {
   if (!tray) return;
   const cfg = config.load();
-  const pluginState = plugin.status();
-  const t = TRAY[resolveLang(cfg.lang)];
+  const watched = activeAssistant();
+  const hookState = watched.hooks.status();
+  const base = TRAY[resolveLang(cfg.lang)];
+  // her lines name the assistant she watches; upstream's say "Claude Code"
+  const t = Object.fromEntries(Object.entries(base).map(([key, value]) =>
+    [key, typeof value === 'string' && watched.id !== 'claude' ? value.replaceAll('Claude Code', watched.name) : value]));
+  // OpenCode's integration is a plugin, not hooks
+  if (watched.id === 'opencode' && PLUGIN[resolveLang(cfg.lang)]) {
+    [t.hooksOn, t.hooksOff, t.hooksRemove] = PLUGIN[resolveLang(cfg.lang)];
+  }
 
   const displays = screen.getAllDisplays();
   const current = targetDisplay().id;
@@ -428,7 +448,23 @@ function rebuildTray() {
         label, type: 'radio', checked: cfg.rest === rest, click: () => updateConfig({ rest }),
       })),
     },
-    { label: t.watch, type: 'checkbox', checked: cfg.claude, click: (item) => updateConfig({ claude: item.checked }) },
+    // the coding assistant she watches (a new one: she says hello and offers to plug herself in), or none
+    {
+      label: t.watch,
+      submenu: [
+        ...Object.entries(ASSISTANTS).map(([id, { name }]) => ({
+          label: name,
+          type: 'radio',
+          checked: cfg.claude && watched.id === id,
+          click: () => {
+            const other = watched.id !== id;
+            updateConfig({ claude: true, assistant: id, ...(other && { linked: false, welcomed: false }) });
+            if (other) sendCommand('assistantChanged');
+          },
+        })),
+        { label: t.watchNone, type: 'radio', checked: !cfg.claude, click: () => updateConfig({ claude: false }) },
+      ],
+    },
     {
       label: t.motion,
       submenu: [['auto', t.motionAuto], ['full', t.motionFull], ['reduced', t.motionReduced]].map(([motion, label]) => ({
@@ -460,19 +496,20 @@ function rebuildTray() {
       checked: app.getLoginItemSettings(loginItemOptions()).openAtLogin,
       click: (item) => app.setLoginItemSettings({ ...loginItemOptions(), openAtLogin: item.checked }),
     },
-    {
+    // tied to OpenCode: the plugin starts her with it and she quits with it
+    ...(watched.id === 'opencode' ? [{
       label: t.follow,
       type: 'checkbox',
       checked: cfg.follow === true,
       click: (item) => updateConfig({ follow: item.checked }),
-    },
-    // her plugin, while she watches OpenCode
+    }] : []),
+    // her integration, while she watches one
     ...(cfg.claude ? [
       { type: 'separator' },
-      pluginState.installed
+      hookState.installed
         ? { label: t.hooksOn, enabled: false }
         : { label: t.hooksOff, click: () => runHooks('install') },
-      ...(pluginState.installed ? [{ label: t.hooksRemove, click: () => runHooks('uninstall') }] : []),
+      ...(hookState.installed ? [{ label: t.hooksRemove, click: () => runHooks('uninstall') }] : []),
     ] : []),
     { type: 'separator' },
     { label: t.quit, click: () => app.quit() },
@@ -518,7 +555,7 @@ function watchOpenCode() {
 function runHooks(action, { quiet = false } = {}) {
   let outcome;
   try {
-    const result = action === 'install' ? plugin.install() : plugin.uninstall();
+    const result = action === 'install' ? activeHooks().install() : activeHooks().uninstall();
     outcome = { action, ok: true, file: result.file };
   } catch (err) {
     outcome = { action, ok: false, error: err.message };
@@ -612,15 +649,15 @@ function registerIpc() {
     return { x: p.x - b.x, y: p.y - b.y, inside: p.x >= b.x && p.y >= b.y && p.x < b.x + b.width && p.y < b.y + b.height };
   });
   ipcMain.handle('config:get', () => rendererConfig());
-  ipcMain.handle('hooks:status', () => plugin.status());
+  ipcMain.handle('hooks:status', () => activeHooks().status());
   ipcMain.handle('config:set', (_e, patch) => updateConfig(patch));
   ipcMain.handle('demo:window', (_e, open) => demoWindow(open));
   // right-clicking her: the same menu as the tray icon (which Windows often hides behind the ^ by the clock)
   ipcMain.on('menu:open', () => trayMenu?.popup({ window: overlay }));
   // her welcome panel's buttons
   ipcMain.handle('hooks:install', () => runHooks('install', { quiet: true }));
-  ipcMain.handle('claude:found', () => fs.existsSync(plugin.folder().dir)); // OpenCode keeps its config there
-  ipcMain.on('claude:help', () => shell.openExternal(OPENCODE_HELP));
+  ipcMain.handle('claude:found', () => fs.existsSync(assistantFolder().dir)); // where her assistant keeps its settings
+  ipcMain.on('claude:help', () => shell.openExternal(activeAssistant().help));
   ipcMain.handle('windows:get', () => lastWindows);
   // talking to her (chat.js): is Ollama there, with a model to talk with
   ipcMain.handle('chat:status', async () => {
@@ -741,9 +778,9 @@ function registerIpc() {
   });
   // her guide: OpenCode's config folder in Explorer, opencode.json selected when present
   ipcMain.handle('guide:claudeFolder', () => {
-    const { dir, label, hasSettings } = plugin.folder();
+    const { dir, file, label, hasSettings } = assistantFolder();
     if (!fs.existsSync(dir)) return { found: false, dir };
-    if (hasSettings) shell.showItemInFolder(path.join(dir, 'opencode.json'));
+    if (hasSettings && fs.existsSync(file)) shell.showItemInFolder(file);
     else shell.openPath(dir);
     return { found: true, dir, label, hasSettings };
   });
@@ -863,6 +900,7 @@ function main() {
   app.whenReady().then(() => {
     // where the OpenCode plugin finds her, to start her when OpenCode opens
     config.save({ launch: { exe: process.execPath, args: app.isPackaged ? [] : [ROOT] } });
+    if (!ASSISTANTS[config.load().assistant]) config.save({ assistant: activeAssistant().id });
     serveProtocol();
     registerIpc();
     createOverlay();

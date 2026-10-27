@@ -4,9 +4,9 @@ Capri, the *Project Capricorn* construct from Cyberpunk: Edgerunners season 2,
 living on your desktop and telling you what **OpenCode** is up to.
 
 This is a fork of [mochiiwuff/capri-desktop](https://github.com/mochiiwuff/capri-desktop)
-that watches OpenCode instead of Claude Code: same character, same animations,
-same menu, different assistant. Credits, art direction and the full tour of what
-she does are in the upstream README.
+that adds **OpenCode** to the assistants she can watch, next to Claude Code,
+Codex and Antigravity: same character, same animations, same menu. Credits, art
+direction and the full tour of what she does are in the upstream README.
 
 ## How it works
 
@@ -89,16 +89,17 @@ you had it.
 
 ## Differences from upstream
 
-- User-facing strings say **OpenCode** (a runtime layer rewrites upstream's
-  strings, so upstream line files stay mergeable).
-- The Claude Code hook is replaced by the OpenCode plugin, installed from her
-  menu, `npm run plugin:install` or `install.bat`. The upstream Claude Code,
-  Codex and Antigravity hook installers are not shipped.
-- The Watch menu is a single on/off switch: OpenCode is the only assistant she
-  knows.
-- "OpenCode's folder" points at `%USERPROFILE%\.config\opencode`, not `~/.claude`.
-- English and Italian are written by hand; French, Spanish, Portuguese and
-  Russian get the name swapped mechanically.
+- **OpenCode is a fourth assistant** she can watch, next to Claude Code, Codex
+  and Antigravity. Pick it in her Watch menu; her integration is the plugin in
+  [`integrations/opencode/`](integrations/opencode/README.md), installed from her
+  menu, `npm run plugin:install` or `install.bat`.
+- Her lines for OpenCode ("OpenCode is working on…", "OpenCode's folder" →
+  `%USERPROFILE%\.config\opencode`) come from the same per-assistant table
+  upstream uses for Codex and Antigravity.
+- A **"Tied to OpenCode"** switch: the plugin starts her when OpenCode opens and
+  she quits when it closes.
+- The local control API for the OpenCode desktop panel (see below), which
+  upstream does not have.
 
 ## Check
 

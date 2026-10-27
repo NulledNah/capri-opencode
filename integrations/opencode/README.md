@@ -2,7 +2,8 @@
 
 The adapter that lets [Capri](../..) watch **OpenCode**. It translates OpenCode
 plugin events into the hook events Capri already understands and POSTs them to
-her local bridge (`127.0.0.1:47823`). No patch, no fork of OpenCode.
+her local bridge (`127.0.0.1:47823`). No patch, no fork of OpenCode. In her tray
+menu, pick **Watch › OpenCode** so she follows this client instead of another.
 
 ## Install
 

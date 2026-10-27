@@ -7,7 +7,7 @@ import { Brain } from './brain.js';
 import { Guide } from './guide.js';
 import { Mission } from './mission.js';
 import { Chat } from './chat.js';
-import { linesFor } from './localize.js';
+import { linesFor } from './lines.js';
 import { Setup } from './setup.js';
 import { Custom } from './custom.js';
 import { pick, fmt, reducedMotion } from './util.js';

@@ -6,6 +6,7 @@
 // right away; anything only the model asked for, a website, and closing an app behind a button.
 
 import { pick, fmt } from './util.js';
+import { ASSISTANT_NAMES } from './lines.js';
 
 const REMEMBER = 20; // messages she has in mind when answering
 const KEEP = 60;     // messages she remembers across restarts (memory.json)
@@ -448,7 +449,7 @@ export class Chat {
   personal() {
     const { userName, persona, memories = [] } = this.brain.custom || {};
     // small models mix the user up with the assistant she watches: said plainly
-    const watched = this.brain.watching ? 'OpenCode' : '';
+    const watched = this.brain.watching ? (this.brain.assistant === 'claude' ? 'Claude' : ASSISTANT_NAMES[this.brain.assistant]) : '';
     const notThem = watched ? ` Never call them "${watched}", that's their coding assistant.` : '';
     return [
       userName ? `The user's name is ${userName}: call them that now and then.${notThem}` : notThem && `You don't know the user's name.${notThem}`,
@@ -466,7 +467,7 @@ export class Chat {
 
   // Who she is, how she talks, and what's going on right now.
   persona() {
-    const assistant = 'OpenCode';
+    const assistant = ASSISTANT_NAMES[this.brain.assistant] || 'Claude Code';
     const watching = this.brain.watching; // else she just keeps you company
     const lang = IN_LANGUAGE[this.brain.lang] || IN_LANGUAGE.en;
     return [

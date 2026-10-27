@@ -138,10 +138,13 @@ export class Guide {
           quote: `${w.noClaude}\n${w.menu}`,
           actions: [
             { id: 'claude', label: w.whatClaude, primary: true },
+            ...(this.freeWay ? [{ id: 'free', label: this.brain.t.setup.free }] : []),
             { id: 'later', label: w.justHang },
           ],
         });
-        if (id === 'claude') {
+        if (id === 'free') {
+          await this.setup.freeNow();
+        } else if (id === 'claude') {
           this.host.openClaudeHelp();
           await this.ask({ face: 'smug', line: w.hi, quote: w.afterInstall, actions: [{ id: 'ok', label: w.ok }] });
         } else if (id === 'later') {
@@ -151,6 +154,11 @@ export class Guide {
       this.host.setConfig({ welcomed: true });
     });
     if (talk) this.onTalk?.();
+  }
+
+  // Claude Code and Codex can run for free through Ollama (`ollama launch`): she offers it for those two
+  get freeWay() {
+    return Boolean(this.setup) && ['claude', 'codex'].includes(this.brain.assistant);
   }
 
   // "How does it work?" in her menu: what she can show you.
@@ -195,9 +203,14 @@ export class Guide {
       quote: `${w.about}\n${w.connect}\n${w.menu}`,
       actions: [
         { id: 'connect', label: w.connectBtn, primary: true },
+        ...(this.freeWay ? [{ id: 'free', label: this.brain.t.setup.free }] : []),
         { id: 'later', label: w.later },
       ],
     });
+    if (id === 'free') {
+      await this.setup.freeNow(); // her hooks, then Claude Code (or Codex) through Ollama
+      return;
+    }
     if (id !== 'connect') return;
     const result = await this.host.installHooks();
     if (!result.ok) {

@@ -61,10 +61,13 @@ function toolInput(args) {
 }
 
 function emit(event) {
+  // Codex and Antigravity hooks tag their sessions; OpenCode's plugin does the same so she can tell
+  // which assistant an event came from.
+  const wire = { ...event, session_id: `opencode:${event.session_id}` };
   fetch(`http://127.0.0.1:${PORT}/event`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(event),
+    body: JSON.stringify(wire),
     signal: AbortSignal.timeout(500),
   }).catch(() => {});
 }

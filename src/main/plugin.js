@@ -49,9 +49,9 @@ function uninstall() {
 // What her guide opens: opencode.json when it exists, the plugins folder otherwise.
 function folder() {
   const dir = configDir();
-  const settings = path.join(dir, 'opencode.json');
-  const hasSettings = fs.existsSync(settings);
-  return { dir, label: hasSettings ? 'opencode.json' : 'plugins', hasSettings };
+  const file = path.join(dir, 'opencode.json');
+  const hasSettings = fs.existsSync(file);
+  return { dir, file, label: hasSettings ? 'opencode.json' : 'plugins', hasSettings };
 }
 
 module.exports = { status, install, uninstall, folder, target };

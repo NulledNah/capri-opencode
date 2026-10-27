@@ -3,7 +3,7 @@
 // The tray menu (and the one she opens when you right-click her), in every language she speaks.
 // The order of this object is the order of the Language submenu.
 
-const RAW = {
+const TRAY = {
   fr: {
     name: 'Français',
     online: (port) => `Capri — à l'écoute sur ${port}`,
@@ -15,7 +15,7 @@ const RAW = {
     show: 'La faire revenir', hide: 'La ranger',
     size: 'Taille', small: 'Petite', medium: 'Moyenne', large: 'Grande', sound: 'Son', mute: 'Muet',
     soundsDir: 'Ouvrir le dossier des sons perso', screen: 'Écran', wander: 'Se balader quand rien ne se passe',
-    possess: 'Posséder mes fenêtres', lang: 'Langue', auto: 'Automatique (système)', startup: 'Lancer au démarrage', follow: 'Liée à OpenCode',
+    possess: 'Posséder mes fenêtres', lang: 'Langue', auto: 'Automatique (système)', startup: 'Lancer au démarrage',
     hooksOn: 'Hooks Claude Code : installés', hooksOff: 'Installer les hooks Claude Code',
     hooksRemove: 'Retirer les hooks Claude Code', forget: 'Oublier nos conversations', quit: 'Quitter',
   },
@@ -30,23 +30,9 @@ const RAW = {
     show: 'Bring her back', hide: 'Put her away',
     size: 'Size', small: 'Small', medium: 'Medium', large: 'Large', sound: 'Sound', mute: 'Mute',
     soundsDir: 'Open custom sounds folder', screen: 'Screen', wander: 'Wander around when idle',
-    possess: 'Possess my windows', lang: 'Language', auto: 'Automatic (system)', startup: 'Start with Windows', follow: 'Tied to OpenCode',
+    possess: 'Possess my windows', lang: 'Language', auto: 'Automatic (system)', startup: 'Start with Windows',
     hooksOn: 'Claude Code hooks: installed', hooksOff: 'Install Claude Code hooks',
     hooksRemove: 'Remove Claude Code hooks', forget: 'Forget our conversations', quit: 'Quit',
-  },
-  it: {
-    name: 'Italiano',
-    online: (port) => `Capri — in ascolto su ${port}`,
-    teleport: 'Teletrasporta', satellite: 'Guarda il satellite', demo: 'Avvia la demo', help: 'Come funziona?',
-    report: 'Rapporto di missione', talk: 'Parlale', chatModel: 'Modello IA (Ollama)', noOllama: 'Ollama non trovato',
-    rest: 'Quando riposa', restCorner: 'Nel suo angolo', restTaskbar: 'Seduta sulla barra delle applicazioni', claude: 'Tieni d’occhio OpenCode',
-    motion: 'Animazioni', motionAuto: 'Come Windows', motionFull: 'Complete', motionReduced: 'Ridotte',
-    show: 'Falla tornare', hide: 'Mettila via',
-    size: 'Dimensione', small: 'Piccola', medium: 'Media', large: 'Grande', sound: 'Audio', mute: 'Muto',
-    soundsDir: 'Apri la cartella dei suoni personalizzati', screen: 'Schermo', wander: 'Vaga quando è inattiva',
-    possess: 'Possiedi le mie finestre', lang: 'Lingua', auto: 'Automatica (sistema)', startup: 'Avvia con Windows', follow: 'Legata a OpenCode',
-    hooksOn: 'Plugin OpenCode: installato', hooksOff: 'Installa il plugin OpenCode',
-    hooksRemove: 'Rimuovi il plugin OpenCode', quit: 'Esci',
   },
   es: {
     name: 'Español',
@@ -59,7 +45,7 @@ const RAW = {
     show: 'Traerla de vuelta', hide: 'Guardarla',
     size: 'Tamaño', small: 'Pequeña', medium: 'Mediana', large: 'Grande', sound: 'Sonido', mute: 'Silenciar',
     soundsDir: 'Abrir la carpeta de sonidos propios', screen: 'Pantalla', wander: 'Pasear cuando no pasa nada',
-    possess: 'Poseer mis ventanas', lang: 'Idioma', auto: 'Automático (sistema)', startup: 'Iniciar con Windows', follow: 'Atada a OpenCode',
+    possess: 'Poseer mis ventanas', lang: 'Idioma', auto: 'Automático (sistema)', startup: 'Iniciar con Windows',
     hooksOn: 'Hooks de Claude Code: instalados', hooksOff: 'Instalar los hooks de Claude Code',
     hooksRemove: 'Quitar los hooks de Claude Code', forget: 'Olvidar nuestras conversaciones', quit: 'Salir',
   },
@@ -74,7 +60,7 @@ const RAW = {
     show: 'Trazer de volta', hide: 'Guardar',
     size: 'Tamanho', small: 'Pequena', medium: 'Média', large: 'Grande', sound: 'Som', mute: 'Sem som',
     soundsDir: 'Abrir a pasta de sons personalizados', screen: 'Tela', wander: 'Passear quando nada acontece',
-    possess: 'Possuir minhas janelas', lang: 'Idioma', auto: 'Automático (sistema)', startup: 'Iniciar com o Windows', follow: 'Ligada ao OpenCode',
+    possess: 'Possuir minhas janelas', lang: 'Idioma', auto: 'Automático (sistema)', startup: 'Iniciar com o Windows',
     hooksOn: 'Hooks do Claude Code: instalados', hooksOff: 'Instalar os hooks do Claude Code',
     hooksRemove: 'Remover os hooks do Claude Code', forget: 'Esquecer nossas conversas', quit: 'Sair',
   },
@@ -89,47 +75,24 @@ const RAW = {
     show: 'Вернуть её', hide: 'Спрятать',
     size: 'Размер', small: 'Маленькая', medium: 'Средняя', large: 'Большая', sound: 'Звук', mute: 'Без звука',
     soundsDir: 'Открыть папку своих звуков', screen: 'Экран', wander: 'Гулять, когда ничего не происходит',
-    possess: 'Вселяться в мои окна', lang: 'Язык', auto: 'Автоматически (системный)', startup: 'Запускать вместе с Windows', follow: 'Связана с OpenCode',
+    possess: 'Вселяться в мои окна', lang: 'Язык', auto: 'Автоматически (системный)', startup: 'Запускать вместе с Windows',
     hooksOn: 'Хуки Claude Code: установлены', hooksOff: 'Установить хуки Claude Code',
     hooksRemove: 'Удалить хуки Claude Code', forget: 'Забыть наши разговоры', quit: 'Выйти',
   },
 };
 
-// Upstream's labels say "Claude"; this fork watches OpenCode. Same rules as the
-// renderer's rebrand.js (kept separate because main and renderer share no modules).
-const RULES = [
-  [/\bClaude Code\b/g, 'OpenCode'],
-  [/\bClaude\b/g, 'OpenCode'],
-  [/\bCLAUDE\b/g, 'OPENCODE'],
-];
-const FR = [
-  [/\bde OpenCode\b/g, "d'OpenCode"],
-  [/\bDe OpenCode\b/g, "D'OpenCode"],
-];
+// This fork's OpenCode tie: the plugin starts her with OpenCode and she quits with it.
+const FOLLOW = {
+  fr: 'Li\u00e9e \u00e0 OpenCode',
+  en: 'Tied to OpenCode',
+  it: 'Legata a OpenCode',
+  es: 'Atada a OpenCode',
+  pt: 'Ligada ao OpenCode',
+  ru: '\u0421\u0432\u044f\u0437\u0430\u043d\u0430 \u0441 OpenCode',
+};
+for (const [lang, label] of Object.entries(FOLLOW)) if (TRAY[lang]) TRAY[lang].follow = label;
 
-function one(text, lang) {
-  let out = text;
-  for (const [pattern, to] of RULES) out = out.replace(pattern, to);
-  if (lang === 'fr') for (const [pattern, to] of FR) out = out.replace(pattern, to);
-  return out;
-}
-
-function rebrand(value, lang) {
-  if (typeof value === 'string') return one(value, lang);
-  if (Array.isArray(value)) return value.map((inner) => rebrand(inner, lang));
-  if (value && typeof value === 'object') {
-    const out = {};
-    for (const [key, inner] of Object.entries(value)) out[key] = rebrand(inner, lang);
-    return out;
-  }
-  return value;
-}
-
-const TRAY = Object.fromEntries(
-  Object.entries(RAW).map(([lang, table]) => [lang, rebrand(table, lang)]),
-);
-
-// There are no hooks anymore: it's the OpenCode plugin (installed from her menu).
+// Her OpenCode integration is a plugin, not hooks: the tray says so when it is the one watched.
 const PLUGIN = {
   fr: ['Plugin OpenCode : installé', 'Installer le plugin OpenCode', 'Retirer le plugin OpenCode'],
   en: ['OpenCode plugin: installed', 'Install OpenCode plugin', 'Remove OpenCode plugin'],
@@ -138,11 +101,5 @@ const PLUGIN = {
   pt: ['Plugin do OpenCode: instalado', 'Instalar o plugin do OpenCode', 'Remover o plugin do OpenCode'],
   ru: ['Плагин OpenCode: установлен', 'Установить плагин OpenCode', 'Удалить плагин OpenCode'],
 };
-for (const [lang, [on, off, remove]] of Object.entries(PLUGIN)) {
-  if (!TRAY[lang]) continue;
-  TRAY[lang].hooksOn = on;
-  TRAY[lang].hooksOff = off;
-  TRAY[lang].hooksRemove = remove;
-}
 
-module.exports = { TRAY, LANGS: Object.keys(TRAY) };
+module.exports = { TRAY, LANGS: Object.keys(TRAY), PLUGIN };

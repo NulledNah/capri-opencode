@@ -1,6 +1,6 @@
 // Turns Claude Code hook events into things Capri says and does.
 
-import { linesFor } from './localize.js';
+import { linesFor, ASSISTANT_NAMES } from './lines.js';
 import { pick, fmt, duration, basename, rand } from './util.js';
 
 const EDIT_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
@@ -41,7 +41,7 @@ export class Brain {
 
   // the assistant she watches, as she calls it
   get name() {
-    return 'OpenCode';
+    return this.assistant === 'claude' ? 'Claude' : ASSISTANT_NAMES[this.assistant] || 'Claude';
   }
 
   session(evt) {
@@ -76,8 +76,8 @@ export class Brain {
     }
     // the demo's second half (scripts/demo-sequence.js), not a Claude event
     if (evt.hook_event_name === 'CapriShowcase') return this.onShowcase?.();
-    // Codex's and Antigravity's hooks mark their sessions (codex:..., agy:...): only the one she watches counts
-    if (!evt.demo && (/^(codex|agy):/.exec(String(evt.session_id || ''))?.[1] || 'claude') !== this.assistant) return;
+    // Codex, Antigravity and OpenCode mark their sessions (codex:..., agy:..., opencode:...): only the one she watches counts
+    if (!evt.demo && (/^(codex|agy|opencode):/.exec(String(evt.session_id || ''))?.[1] || 'claude') !== this.assistant) return;
     if (!this.watching && !evt.demo) return undefined; // not watching Claude Code: none of its business
     // the first real Claude Code event that ever reaches her (the demo's don't count)
     if (!this.linked && !evt.demo) {

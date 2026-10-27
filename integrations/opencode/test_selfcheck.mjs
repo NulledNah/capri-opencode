@@ -107,6 +107,6 @@ assert(calls.length === before, 'child session is ignored');
 await send('session.compaction.started', { sessionID: 's1' });
 await send('session.deleted', { sessionID: 's1' });
 assert(by('PreCompact').length === 1, 'compaction');
-assert(by('SessionEnd')[0].session_id === 's1', 'session end');
+assert(by('SessionEnd')[0].session_id === 'opencode:s1', 'session end');
 
 console.log('ok -', calls.length, 'events ->', calls[0].url);
