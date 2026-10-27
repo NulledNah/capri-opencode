@@ -318,7 +318,7 @@ export const LINES = {
       // opening an app or a game, the music, a website
       openIt: 'Open {app}', opened: '{app}: on it.', notInstalled: 'I can’t find “{app}” on your PC.',
       music: 'Looking up “{song}” on Spotify.', siteIt: 'Open {site}', siteOpened: '{site}: open.',
-      media: { pause: 'Paused.', play: 'Playing.', next: 'Next one.', previous: 'Previous one.', volup: 'Louder.', voldown: 'Quieter.', mute: 'Hit mute.' },
+      media: { pause: 'Paused.', play: 'Playing.', next: 'Next one.', previous: 'Previous one.', restart: 'From the top.', volup: 'Louder.', voldown: 'Quieter.', mute: 'Hit mute.' },
     },
     // her report card: what Claude got through today (her menu, or on her own in the evening)
     report: {
@@ -1399,6 +1399,7 @@ if (LINES.it) {
         play: 'Riproduco.',
         next: 'Prossima.',
         previous: 'Precedente.',
+        restart: 'Da capo.',
         volup: 'Più forte.',
         voldown: 'Più piano.',
         mute: 'Muto.',

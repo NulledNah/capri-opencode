@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('host', {
   spotifyDisconnect: () => ipcRenderer.invoke('spotify:disconnect'),
   spotifyPlay: (query) => ipcRenderer.invoke('spotify:play', query),
   spotifyQueue: (query) => ipcRenderer.invoke('spotify:queue', query),
+  spotifyControl: (action) => ipcRenderer.invoke('spotify:control', action),
   spotifyPage: () => ipcRenderer.send('spotify:page'),
   focusOverlay: (on) => ipcRenderer.send('overlay:focus', Boolean(on)),
 });

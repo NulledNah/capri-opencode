@@ -786,6 +786,7 @@ function registerIpc() {
   });
   ipcMain.handle('spotify:play', (_e, query) => spotify.play(query));
   ipcMain.handle('spotify:queue', (_e, query) => spotify.queue(query));
+  ipcMain.handle('spotify:control', (_e, action) => spotify.control(action));
   ipcMain.on('spotify:page', () => spotify.openDashboard());
   // typing to her: the overlay takes the keyboard while the chat is open, and gives it back after
   ipcMain.on('overlay:focus', (_e, on) => {

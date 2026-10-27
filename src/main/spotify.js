@@ -352,4 +352,19 @@ async function queue(query) {
 
 const openDashboard = () => shell.openExternal('https://developer.spotify.com/dashboard');
 
-module.exports = { status, setClientId, connect, disconnect, play, queue, openDashboard, redirect: REDIRECT };
+async function control(action) {
+  try {
+    const token = await accessToken();
+    if (action === 'next') await api(token, 'POST', '/me/player/next');
+    else if (action === 'previous') await api(token, 'POST', '/me/player/previous');
+    else if (action === 'pause') await api(token, 'PUT', '/me/player/pause');
+    else if (action === 'play') await api(token, 'PUT', '/me/player/play');
+    else if (action === 'restart') await api(token, 'PUT', '/me/player/seek?position_ms=0');
+    else return { ok: false, code: 'unsupported', error: 'unknown media action' };
+    return { ok: true };
+  } catch (err) {
+    return failed(err);
+  }
+}
+
+module.exports = { status, setClientId, connect, disconnect, play, queue, control, openDashboard, redirect: REDIRECT };

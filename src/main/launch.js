@@ -148,8 +148,14 @@ const MEDIA = { pause: [179, 1], play: [179, 1], next: [176, 1], previous: [177,
 async function media(action) {
   if (!WIN || !MEDIA[action]) return false;
   const [key, times] = MEDIA[action];
-  return powershell(`$w = New-Object -ComObject WScript.Shell; 1..${times} | ForEach-Object { $w.SendKeys([string][char]${key}) }`)
-    .then(() => true, () => false);
+  // WScript SendKeys would type the character into the focused window, not press a media key:
+  // keybd_event sends the real global VK_MEDIA_* / VK_VOLUME_* key, so Spotify reacts.
+  const script = 'Add-Type -Namespace Capri -Name Keys -MemberDefinition '
+    + '\'[DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);\'; '
+    + `1..${times} | ForEach-Object { `
+    + `[Capri.Keys]::keybd_event(${key}, 0, 0, [UIntPtr]::Zero); `
+    + `[Capri.Keys]::keybd_event(${key}, 0, 2, [UIntPtr]::Zero) }`;
+  return powershell(script).then(() => true, () => false);
 }
 
 // A Spotify search for it: in the app if it's installed, else on the web.

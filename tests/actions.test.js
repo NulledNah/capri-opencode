@@ -33,6 +33,11 @@ test('Italian verbs open, close and control music', async () => {
   assert.deepEqual(chat.asked('abbassa il volume'), { kind: 'media', action: 'voldown' });
   assert.deepEqual(chat.asked('canzone precedente'), { kind: 'media', action: 'previous' });
   assert.deepEqual(chat.asked('metti in pausa la musica'), { kind: 'media', action: 'pause' });
+  assert.deepEqual(chat.asked('passa alla successiva'), { kind: 'media', action: 'next' });
+  assert.deepEqual(chat.asked('metti la prossima'), { kind: 'media', action: 'next' });
+  assert.deepEqual(chat.asked('torna alla precedente'), { kind: 'media', action: 'previous' });
+  assert.deepEqual(chat.asked('rimettila da capo'), { kind: 'media', action: 'restart' });
+  assert.deepEqual(chat.asked('ricomincia la canzone'), { kind: 'media', action: 'restart' });
 
   for (const text of [
     'metti Run the Jewels su Spotify',

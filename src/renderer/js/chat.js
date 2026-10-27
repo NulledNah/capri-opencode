@@ -31,8 +31,9 @@ const OPEN_ASK = /\b(open|launch|start|run)\b|ouvr|lance|démarre|abre|abrir|ini
 // what to do with the music playing, said plainly (only when it's about music, or said in a few words)
 const MEDIA_ASK = [
   ['pause', /\b(pause|pausa|pausar)\b|stop (the )?music|arrête la musique|пауз/i],
-  ['next', /\b(next|skip|suivante?|siguiente|próxima|proxima)\b|passe (à )?la suivante|salta|pula|prossim|следующ/i],
+  ['next', /\b(next|skip|suivante?|siguiente|próxima|proxima)\b|passe (à )?la suivante|salta|pula|prossim|successiva|passa (?:alla|alla prossima|avanti)|metti la prossima|cambia (?:canzone|brano)|следующ/i],
   ['previous', /\b(previous|précédente?|anterior)\b|precedent|предыдущ/i],
+  ['restart', /\b(da capo|dall['’]inizio|ricomincia|riparti|restart|recommence|desde el principio|do início|с начала)\b/i],
   ['play', /\b(resume|reprends|reanuda|retoma)\b|relance la musique|remets la musique|riprendi|продолж/i],
   ['volup', /\b(louder|plus fort)\b|monte le son|turn (it )?up|sube el volumen|aumenta o volume|\balza(?:re)? (?:il )?volume\b|più forte|громче/i],
   ['voldown', /\b(quieter|moins fort)\b|baisse le son|turn (it )?down|baja el volumen|abaixa o volume|\babbassa(?:re)? (?:il )?volume\b|più piano|тише/i],
@@ -288,7 +289,7 @@ export class Chat {
     }
     if (asked.kind === 'media') {
       this.capri.pulse();
-      return (await this.host.media(asked.action)) ? { line: t.media[asked.action], face: 'smug' } : null;
+      return (await this.mediaNow(asked.action)) ? { line: t.media[asked.action], face: 'smug' } : null;
     }
     if (asked.kind === 'music') return this.playSong(asked.song);
     if (asked.kind === 'queue') return this.queueSong(asked.song);
@@ -363,10 +364,21 @@ export class Chat {
     this.addLine(answer, res.ok ? fmt(t.opened, { app: item.name }) : `${t.failed} ${res.error}`, res.ok ? 'laugh' : 'aside');
   }
 
-  // The media keys: pause, next, louder…
+  // The media keys: pause, next, louder… ("restart" and the transport controls go through
+  // Spotify's API when it can, because the media keys do not always reach it).
+  async mediaNow(action) {
+    const viaApi = ['next', 'previous', 'pause', 'play', 'restart'];
+    if (viaApi.includes(action)) {
+      const res = await this.host.spotifyControl(action).catch(() => ({ ok: false }));
+      if (res.ok) return true;
+      if (action === 'restart') return this.host.media('previous');
+    }
+    return this.host.media(action);
+  }
+
   async media(action, answer) {
     this.capri.pulse();
-    const ok = await this.host.media(action);
+    const ok = await this.mediaNow(action);
     if (ok) this.addLine(answer, this.t.media[action], 'smug');
   }
 
@@ -483,7 +495,7 @@ export class Chat {
   // What she can do on the PC when you ask (Windows), and nothing else.
   powers() {
     const lines = [
-      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: answer with one short line and one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, volup, voldown or mute), or [[site: ADDRESS]]. Music and queue start right away, so say it is playing or queued; opening an app, closing one, or a website gets a button to confirm, so never say it is already done. The words "in coda" can come before the song: "metti in coda 2003 di Bello Figo" is [[queue: 2003 di Bello Figo]], never a track called "in coda". Any other time, write no tag at all: there are no other tags.',
+      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: answer with one short line and one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, restart, volup, voldown or mute), or [[site: ADDRESS]]. Music and queue start right away, so say it is playing or queued; opening an app, closing one, or a website gets a button to confirm, so never say it is already done. The words "in coda" can come before the song: "metti in coda 2003 di Bello Figo" is [[queue: 2003 di Bello Figo]], never a track called "in coda". Any other time, write no tag at all: there are no other tags.',
     ];
     if (this.apps.length) {
       const open = this.apps.map(({ name, label }) => (label && label !== name ? `${name} (${label})` : name)).join(', ');
