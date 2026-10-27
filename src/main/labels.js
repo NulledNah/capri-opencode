@@ -38,7 +38,7 @@ const TRAY = {
     name: 'Italiano',
     online: (port) => `Capri — in ascolto su ${port}`,
     teleport: 'Teletrasporta', satellite: 'Guarda il satellite', demo: 'Avvia la demo', help: 'Come funziona?',
-    report: 'Rapporto di missione', talk: 'Parlale', chatModel: 'Modello IA (Ollama)', noOllama: 'Ollama non trovato',
+    report: 'Rapporto di missione', talk: 'Parlale', chatModel: 'Modello IA', noOllama: 'Ollama non trovato',
     rest: 'Quando riposa', restCorner: 'Nel suo angolo', restTaskbar: 'Seduta sulla barra delle applicazioni', claude: 'Tieni d’occhio OpenCode',
     motion: 'Animazioni', motionAuto: 'Come Windows', motionFull: 'Complete', motionReduced: 'Ridotte',
     show: 'Falla tornare', hide: 'Mettila via',
