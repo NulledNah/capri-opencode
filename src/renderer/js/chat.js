@@ -374,6 +374,7 @@ export class Chat {
 
   spotifyError(res) {
     const s = this.t.setup.spotify;
+    if (res.code === 'queue') return fmt(s.queueFailed, { error: res.error || '' });
     const known = { premium: s.premium, no_device: s.noDevice, not_connected: s.notConnected, noclient: s.notConnected };
     return known[res.code] || fmt(s.playFailed, { error: res.error || '' });
   }
@@ -473,7 +474,7 @@ export class Chat {
   // What she can do on the PC when you ask (Windows), and nothing else.
   powers() {
     const lines = [
-      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: say in a few words that you will, and end your answer with one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, volup, voldown or mute), or [[site: ADDRESS]]. Some of these get a button to confirm, so never say it is already done. Any other time, write no tag at all: there are no other tags.',
+      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: answer with one short line and one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, volup, voldown or mute), or [[site: ADDRESS]]. Music and queue start right away, so say it is playing or queued; opening an app, closing one, or a website gets a button to confirm, so never say it is already done. Any other time, write no tag at all: there are no other tags.',
     ];
     if (this.apps.length) {
       const open = this.apps.map(({ name, label }) => (label && label !== name ? `${name} (${label})` : name)).join(', ');

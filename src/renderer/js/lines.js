@@ -443,6 +443,7 @@ export const LINES = {
         premium: 'Spotify Premium is needed to start playback or queue.',
         noDevice: 'Open Spotify and start something once, then try again.',
         playFailed: 'Spotify didn’t start the music: {error}',
+        queueFailed: 'Spotify didn’t queue it: {error}',
       },
     },
     // making her yours (custom.js), and "call me Max", "remember that…" in her chat
@@ -1480,6 +1481,7 @@ if (LINES.it) {
         premium: 'Spotify Premium serve per avviare la riproduzione o accodare.',
         noDevice: 'Apri Spotify e avvia qualcosa una volta, poi riprova.',
         playFailed: 'Spotify non ha fatto partire la musica: {error}',
+        queueFailed: 'Spotify non ha aggiunto il brano alla coda: {error}',
       },
     },
     custom: {

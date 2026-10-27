@@ -13,7 +13,7 @@ const AUTH = 'https://accounts.spotify.com';
 const API = 'https://api.spotify.com/v1';
 const PORT = 47824;
 const REDIRECT = `http://127.0.0.1:${PORT}/spotify/callback`;
-const SCOPES = 'user-modify-playback-state user-read-playback-state';
+const SCOPES = 'user-read-private user-modify-playback-state user-read-playback-state';
 const WAIT_MS = 3 * 60 * 1000;
 
 const b64url = (buf) => buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -230,12 +230,40 @@ function connect() {
   return connecting;
 }
 
+const strip = (text) => String(text || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+const wordsOf = (text) => strip(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+
 async function searchTrack(query) {
-  const q = String(query || '').trim().slice(0, 200);
+  const q = String(query || '').trim().replace(/^["“”']+|["“”']+$/g, '').slice(0, 200);
   if (!q) throw Object.assign(new Error('no track'), { code: 'notfound' });
-  const data = await withToken('GET', `/search?type=track&limit=1&q=${encodeURIComponent(q)}`);
-  const track = data?.tracks?.items?.[0];
-  if (!track) throw Object.assign(new Error(`No Spotify track found for "${q}"`), { code: 'notfound' });
+  const find = async (text) => {
+    const data = await withToken('GET', `/search?type=track&limit=5&q=${encodeURIComponent(text)}`);
+    return data?.tracks?.items || [];
+  };
+  const score = (items) => {
+    const said = wordsOf(q);
+    const poolOf = (item) => new Set([...wordsOf(item.name), ...(item.artists || []).flatMap((a) => wordsOf(a.name))]);
+    return items.reduce((best, item) => {
+      if (!item?.uri) return best;
+      const name = wordsOf(item.name);
+      const artists = (item.artists || []).flatMap((a) => wordsOf(a.name));
+      const pool = poolOf(item);
+      const hits = said.filter((w) => pool.has(w)).length;
+      const nameHits = said.filter((w) => name.includes(w)).length;
+      const artistHits = said.filter((w) => artists.includes(w)).length;
+      const cover = name.length ? name.filter((w) => said.includes(w)).length / name.length : 0;
+      const value = nameHits * 2 + artistHits * 1.5 + hits + cover * 2;
+      return !best || value > best.value ? { item, value } : best;
+    }, null);
+  };
+  let best = score(await find(q));
+  // A full phrase ("song by artist") can rank badly: try the exact words once.
+  if (!best || best.value < 2) {
+    const exact = score(await find(`"${q}"`));
+    if (exact && (!best || exact.value > best.value)) best = exact;
+  }
+  if (!best) throw Object.assign(new Error(`No Spotify track found for "${q}"`), { code: 'notfound' });
+  const track = best.item;
   return {
     uri: track.uri,
     name: track.name,
@@ -266,6 +294,15 @@ function failed(err) {
   return { ok: false, code, error: text };
 }
 
+async function openTrack(uri) {
+  try {
+    await shell.openExternal(uri);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function play(query) {
   try {
     const token = await accessToken();
@@ -273,11 +310,18 @@ async function play(query) {
     try {
       await api(token, 'PUT', '/me/player/play', { uris: [track.uri] });
     } catch (err) {
-      if (err.code !== 'no_device') throw err;
-      await wakeDevice();
-      await api(token, 'PUT', '/me/player/play', { uris: [track.uri] });
+      if (err.code === 'not_connected' || err.code === 'auth') throw err;
+      // Premium or no woken device: the app can still open the track itself.
+      if (!(await openTrack(track.uri))) return failed(err);
+      return { ok: true, track, via: 'app' };
     }
-    return { ok: true, track };
+    // The desktop client sometimes accepts the command and does nothing (stale Connect
+    // session): check it really started, else open the track in the app.
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    const state = await api(token, 'GET', '/me/player').catch(() => null);
+    if (state?.is_playing && state.item?.uri === track.uri) return { ok: true, track };
+    if (await openTrack(track.uri)) return { ok: true, track, via: 'app' };
+    return failed(Object.assign(new Error('Spotify accepted the command but did not start playing'), { code: 'silent' }));
   } catch (err) {
     return failed(err);
   }
@@ -294,6 +338,11 @@ async function queue(query) {
       if (err.code !== 'no_device') throw err;
       await wakeDevice();
       await add();
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const q = await api(token, 'GET', '/me/player/queue').catch(() => null);
+    if (q?.queue && !q.queue.some((item) => item.uri === track.uri)) {
+      return { ok: false, code: 'queue', error: 'Spotify did not queue it (no active device?)' };
     }
     return { ok: true, track };
   } catch (err) {
