@@ -34,6 +34,20 @@ const TRAY = {
     hooksOn: 'Claude Code hooks: installed', hooksOff: 'Install Claude Code hooks',
     hooksRemove: 'Remove Claude Code hooks', forget: 'Forget our conversations', quit: 'Quit',
   },
+  it: {
+    name: 'Italiano',
+    online: (port) => `Capri — in ascolto su ${port}`,
+    teleport: 'Teletrasporta', satellite: 'Guarda il satellite', demo: 'Avvia la demo', help: 'Come funziona?',
+    report: 'Rapporto di missione', talk: 'Parlale', chatModel: 'Modello IA (Ollama)', noOllama: 'Ollama non trovato',
+    rest: 'Quando riposa', restCorner: 'Nel suo angolo', restTaskbar: 'Seduta sulla barra delle applicazioni', claude: 'Tieni d’occhio OpenCode',
+    motion: 'Animazioni', motionAuto: 'Come Windows', motionFull: 'Complete', motionReduced: 'Ridotte',
+    show: 'Falla tornare', hide: 'Mettila via',
+    size: 'Dimensione', small: 'Piccola', medium: 'Media', large: 'Grande', sound: 'Audio', mute: 'Muto',
+    soundsDir: 'Apri la cartella dei suoni personalizzati', screen: 'Schermo', wander: 'Vaga quando è inattiva',
+    possess: 'Possiedi le mie finestre', lang: 'Lingua', auto: 'Automatica (sistema)', startup: 'Avvia con Windows', follow: 'Legata a OpenCode',
+    hooksOn: 'Plugin OpenCode: installato', hooksOff: 'Installa il plugin OpenCode',
+    hooksRemove: 'Rimuovi il plugin OpenCode', quit: 'Esci',
+  },
   es: {
     name: 'Español',
     online: (port) => `Capri — escuchando en ${port}`,
@@ -91,6 +105,24 @@ const FOLLOW = {
   ru: '\u0421\u0432\u044f\u0437\u0430\u043d\u0430 \u0441 OpenCode',
 };
 for (const [lang, label] of Object.entries(FOLLOW)) if (TRAY[lang]) TRAY[lang].follow = label;
+
+// This fork's Italian table predates upstream's newer settings: add them here.
+Object.assign(TRAY.it, {
+  custom: 'Fammi tua…',
+  aiSetup: 'Configura la chat…',
+  apiKey: 'Chiave API o indirizzo…',
+  watch: 'Osserva',
+  watchNone: 'Niente, fammi solo compagnia',
+  display: 'Schermo',
+  displayAuto: 'Normale',
+  displayGl: 'OpenGL (se lo sfondo è nero)',
+  displaySoftware: 'Senza scheda grafica (se resta nero)',
+  forget: 'Dimentica le nostre conversazioni',
+  // base wording for the other assistants; OpenCode's plugin labels are applied in main.js
+  hooksOn: 'Hook di Claude Code: installati',
+  hooksOff: 'Installa gli hook di Claude Code',
+  hooksRemove: 'Rimuovi gli hook di Claude Code',
+});
 
 // Her OpenCode integration is a plugin, not hooks: the tray says so when it is the one watched.
 const PLUGIN = {
