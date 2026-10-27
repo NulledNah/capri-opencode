@@ -42,6 +42,8 @@ const MEDIA_ASK = [
 const MUSIC_WORD = /musi|chanson|song|track|titre|morceau|spotify|canzon|brano|faixa|песн|музык|трек/i;
 // "put X on Spotify", "mets X sur Spotify", "pon X en Spotify", "coloca X no Spotify", "включи X в Spotify"
 const SPOTIFY_ASK = /(?:play|put on|put|mets|joue|lance|écoute|pon|toca|reproduce|coloca|toque|metti|riproduci|ascolta|включи|поставь)\s+(?:moi\s+|me\s+|un po' di\s+)?(.+?)\s+(?:on|sur|en|no|na|su|sullo|sulla|в)\s+spotify/i;
+// A short follow-up that asks to do the last thing again: "di nuovo", "ancora", "again"…
+const REPEAT = /^(?:capri,?\s+)?(?:di nuovo|ancora(?: una volta)?|rifallo|rifai|ripeti(?:lo)?|again|once more|encore|otra vez|de nuevo|de novo|outra vez|ещё раз|еще раз)[\s.!?]*$/i;
 // "queue X", "add X to the queue", "metti X in coda", "metti in coda X" (any order)
 const QUEUE_PHRASE = /\b(?:in coda|alla coda|nella coda|in queue|in the queue|to the queue|to queue|dans la file|à la file|a la cola|en la cola|na fila|в очередь)\b/i;
 const QUEUE_WORD = /\b(?:queue|in coda|alla coda|nella coda|in queue|in the queue|to the queue|to queue|dans la file|à la file|a la cola|en la cola|na fila|в очередь)\b/i;
@@ -98,6 +100,7 @@ export class Chat {
     this.answer = '';
     this.apps = [];    // the apps open on this PC, as last listed: [{ name, label }]
     this.appsReady = Promise.resolve();
+    this.last = null;  // the last play/queue/media action, for "di nuovo"
     this.onSetup = null; // (status) => void: she can't answer yet (app.js hands it to setup.js)
     this.onBetterModel = null; // () => void: a bigger model than the tiny one she's on (setup.js)
     host.onChatDelta(({ id, text }) => this.onDelta(id, text));
@@ -257,6 +260,7 @@ export class Chat {
   // { kind: 'media', action } | { kind: 'music', song } | { kind: 'close', name } | { kind: 'open', text }
   asked(text) {
     const count = text.trim().split(/\s+/).length;
+    if (this.last && REPEAT.test(text)) return { ...this.last, repeat: true };
     const name = NAME_ASK.exec(text)?.[1];
     if (name) return { kind: 'name', name };
     const memo = MEMO_ASK.exec(text)?.[1]?.trim();
@@ -289,7 +293,9 @@ export class Chat {
     }
     if (asked.kind === 'media') {
       this.capri.pulse();
-      return (await this.mediaNow(asked.action)) ? { line: t.media[asked.action], face: 'smug' } : null;
+      const ok = await this.mediaNow(asked.action);
+      if (ok) this.last = { kind: 'media', action: asked.action };
+      return ok ? { line: t.media[asked.action], face: 'smug' } : null;
     }
     if (asked.kind === 'music') return this.playSong(asked.song);
     if (asked.kind === 'queue') return this.queueSong(asked.song);
@@ -379,6 +385,7 @@ export class Chat {
   async media(action, answer) {
     this.capri.pulse();
     const ok = await this.mediaNow(action);
+    if (ok) this.last = { kind: 'media', action };
     if (ok) this.addLine(answer, this.t.media[action], 'smug');
   }
 
@@ -402,6 +409,7 @@ export class Chat {
 
   async playSong(song) {
     this.zap();
+    this.last = { kind: 'music', song };
     const res = await this.host.spotifyPlay(song);
     if (res.ok) return { line: fmt(this.t.setup.spotify.playing, { song: this.trackLine(res.track) }), face: 'laugh' };
     if (res.code === 'not_connected' || res.code === 'noclient') {
@@ -413,6 +421,7 @@ export class Chat {
 
   async queueSong(song) {
     this.zap();
+    this.last = { kind: 'queue', song };
     const res = await this.host.spotifyQueue(song);
     if (res.ok) return { line: fmt(this.t.setup.spotify.queued, { song: this.trackLine(res.track) }), face: 'laugh' };
     return { line: this.spotifyError(res), face: 'aside' };
@@ -495,7 +504,7 @@ export class Chat {
   // What she can do on the PC when you ask (Windows), and nothing else.
   powers() {
     const lines = [
-      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: answer with one short line and one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, restart, volup, voldown or mute), or [[site: ADDRESS]]. Music and queue start right away, so say it is playing or queued; opening an app, closing one, or a website gets a button to confirm, so never say it is already done. The words "in coda" can come before the song: "metti in coda 2003 di Bello Figo" is [[queue: 2003 di Bello Figo]], never a track called "in coda". Any other time, write no tag at all: there are no other tags.',
+      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: answer with one short line and one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, restart, volup, voldown or mute), or [[site: ADDRESS]]. Music and queue start right away, so say it is playing or queued; opening an app, closing one, or a website gets a button to confirm, so never say it is already done. The words "in coda" can come before the song: "metti in coda 2003 di Bello Figo" is [[queue: 2003 di Bello Figo]], never a track called "in coda". If the user answers just "di nuovo", "ancora" or "again", repeat the last action you took, with the same tag. Any other time, write no tag at all: there are no other tags.',
     ];
     if (this.apps.length) {
       const open = this.apps.map(({ name, label }) => (label && label !== name ? `${name} (${label})` : name)).join(', ');

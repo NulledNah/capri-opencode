@@ -61,3 +61,18 @@ test('Italian verbs open, close and control music', async () => {
   assert.equal(chat.asked('aprile'), null); // "apri" is not a prefix match
   assert.equal(chat.asked('chiacchiero'), null); // nor is "chiudi"
 });
+
+test('short repeat phrases re-run the last action', async () => {
+  const { Chat } = await import(moduleUrl(path.join(__dirname, '../src/renderer/js/chat.js')));
+  const chat = Object.create(Chat.prototype);
+  assert.equal(chat.asked('di nuovo'), null); // nothing done yet
+
+  chat.last = { kind: 'media', action: 'next' };
+  for (const text of ['di nuovo', 'ancora', 'ancora una volta', 'ripeti', 'rifallo', 'again']) {
+    assert.deepEqual(chat.asked(text), { kind: 'media', action: 'next', repeat: true }, text);
+  }
+  assert.equal(chat.asked('di nuovo, per favore'), null);
+
+  chat.last = { kind: 'music', song: '2003 di bello figo' };
+  assert.deepEqual(chat.asked('di nuovo'), { kind: 'music', song: '2003 di bello figo', repeat: true });
+});
