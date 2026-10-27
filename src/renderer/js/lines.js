@@ -222,7 +222,7 @@ export const LINES = {
       alone: 'Pas de Claude Code ici, pas de boulot : je reste juste sur ton bureau avec toi.',
       about: 'Je vis sur ton bureau et je réagis à ce que fait Claude Code sur ce PC. Sans lui, je traîne juste dans le coin, et c’est très bien aussi.',
       connect: 'Tu veux que je me branche sur Claude Code ? Un clic, puis ferme complètement Claude Code et rouvre-le.',
-      noClaude: 'Je ne trouve pas Claude Code sur ce PC (il faut un abonnement Claude). Sans lui, je reste juste là à vivre ma vie.',
+      noClaude: 'Je ne trouve pas Claude Code sur ce PC. Sans lui, je reste juste là à vivre ma vie.',
       menu: 'Clic droit sur moi pour mon menu. Ctrl+Alt+C pour me ranger.',
       connectBtn: 'Me brancher', later: 'Plus tard', whatClaude: 'C’est quoi Claude Code ?', justHang: 'Juste traîner', ok: 'Compris',
       connected: 'Branchée !',
@@ -457,7 +457,7 @@ export const LINES = {
       alone: 'No Claude Code here, no work: I’ll just hang out on your desktop with you.',
       about: 'I live on your desktop and react to what Claude Code does on this PC. Without it, I just hang out here, and that’s fine too.',
       connect: 'Want me to plug into Claude Code? One click, then close Claude Code completely and open it again.',
-      noClaude: 'I can’t find Claude Code on this PC (it needs a Claude subscription). Without it, I’ll just hang out and live my life.',
+      noClaude: 'I can’t find Claude Code on this PC. Without it, I’ll just hang out and live my life.',
       menu: 'Right-click me for my menu. Ctrl+Alt+C tucks me away.',
       connectBtn: 'Plug me in', later: 'Later', whatClaude: 'What’s Claude Code?', justHang: 'Just hang out', ok: 'Got it',
       connected: 'Plugged in!',
@@ -839,7 +839,7 @@ export const LINES = {
       alone: 'Aquí no hay Claude Code ni trabajo: me quedo en tu escritorio contigo.',
       about: 'Vivo en tu escritorio y reacciono a lo que hace Claude Code en este PC. Sin él, simplemente ando por aquí, y también está bien.',
       connect: '¿Quieres que me conecte a Claude Code? Un clic, y luego cierra Claude Code por completo y vuelve a abrirlo.',
-      noClaude: 'No encuentro Claude Code en este PC (necesita una suscripción de Claude). Sin él, me quedo aquí viviendo mi vida.',
+      noClaude: 'No encuentro Claude Code en este PC. Sin él, me quedo aquí viviendo mi vida.',
       menu: 'Clic derecho sobre mí para abrir mi menú. Ctrl+Alt+C me guarda.',
       connectBtn: 'Conectarme', later: 'Más tarde', whatClaude: '¿Qué es Claude Code?', justHang: 'Solo pasear', ok: 'Entendido',
       connected: '¡Conectada!',
@@ -1072,7 +1072,7 @@ export const LINES = {
       alone: 'Sem Claude Code aqui, sem trabalho: eu só fico no seu desktop com você.',
       about: 'Eu moro na sua área de trabalho e reajo ao que o Claude Code faz neste PC. Sem ele, eu só fico por aqui de boa, e tudo bem também.',
       connect: 'Quer que eu me conecte ao Claude Code? Um clique, depois feche o Claude Code completamente e abra de novo.',
-      noClaude: 'Não encontrei o Claude Code neste PC (ele precisa de uma assinatura do Claude). Sem ele, eu fico só vivendo minha vida aqui.',
+      noClaude: 'Não encontrei o Claude Code neste PC. Sem ele, eu fico só vivendo minha vida aqui.',
       menu: 'Clique com o botão direito em mim para abrir meu menu. Ctrl+Alt+C me guarda.',
       connectBtn: 'Me conectar', later: 'Depois', whatClaude: 'O que é o Claude Code?', justHang: 'Só ficar de boa', ok: 'Entendi',
       connected: 'Conectada!',
@@ -1307,7 +1307,7 @@ export const LINES = {
       alone: 'Здесь нет Claude Code и работы: я просто побуду у тебя на рабочем столе.',
       about: 'Я живу на твоём рабочем столе и реагирую на то, что делает Claude Code на этом ПК. Без него я просто тусуюсь рядом, и это тоже нормально.',
       connect: 'Подключиться к Claude Code? Один клик, потом полностью закрой Claude Code и открой снова.',
-      noClaude: 'Я не нахожу Claude Code на этом ПК (для него нужна подписка Claude). Без него я просто живу здесь своей жизнью.',
+      noClaude: 'Я не нахожу Claude Code на этом ПК. Без него я просто живу здесь своей жизнью.',
       menu: 'Правый клик по мне — моё меню. Ctrl+Alt+C — спрятать меня.',
       connectBtn: 'Подключить', later: 'Позже', whatClaude: 'Что такое Claude Code?', justHang: 'Просто тусоваться', ok: 'Понятно',
       connected: 'Подключено!',
@@ -1570,7 +1570,6 @@ export function linesFor(lang, assistant = 'claude') {
   const after = other.after[lang] || other.after.en;
   result.welcome.connect = other.ask[lang] || other.ask.en;
   result.welcome.restart = after;
-  result.welcome.noClaude = result.welcome.about; // nothing to buy for these
   result.hooksOk = after;
   converted.set(key, result);
   return result;
