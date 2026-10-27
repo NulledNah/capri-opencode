@@ -76,4 +76,4 @@ async function chat({ model, messages }, onDelta, signal) {
   return text;
 }
 
-module.exports = { models, warm, chat };
+module.exports = { base, models, warm, chat };

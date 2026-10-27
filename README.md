@@ -92,7 +92,10 @@ you had it.
 - User-facing strings say **OpenCode** (a runtime layer rewrites upstream's
   strings, so upstream line files stay mergeable).
 - The Claude Code hook is replaced by the OpenCode plugin, installed from her
-  menu, `npm run plugin:install` or `install.bat`.
+  menu, `npm run plugin:install` or `install.bat`. The upstream Claude Code,
+  Codex and Antigravity hook installers are not shipped.
+- The Watch menu is a single on/off switch: OpenCode is the only assistant she
+  knows.
 - "OpenCode's folder" points at `%USERPROFILE%\.config\opencode`, not `~/.claude`.
 - English and Italian are written by hand; French, Spanish, Portuguese and
   Russian get the name swapped mechanically.
