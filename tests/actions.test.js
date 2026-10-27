@@ -45,6 +45,13 @@ test('Italian verbs open, close and control music', async () => {
 
   assert.deepEqual(chat.asked('aggiungi Run the Jewels alla coda'), { kind: 'queue', song: 'Run the Jewels' });
   assert.deepEqual(chat.asked('metti Daft Punk in coda'), { kind: 'queue', song: 'Daft Punk' });
+  assert.deepEqual(chat.asked('metti in coda 2003 di bello figo su spotify'), { kind: 'queue', song: '2003 di bello figo' });
+  assert.deepEqual(chat.asked('metti in coda 2003 di bello figo'), { kind: 'queue', song: '2003 di bello figo' });
+  assert.deepEqual(chat.asked('aggiungi alla coda 2003 di bello figo'), { kind: 'queue', song: '2003 di bello figo' });
+  assert.deepEqual(chat.asked('accoda 2003 di bello figo'), { kind: 'queue', song: '2003 di bello figo' });
+  assert.deepEqual(chat.asked('add 2003 by Bello Figo to the queue'), { kind: 'queue', song: '2003 by Bello Figo' });
+  assert.equal(chat.asked('metti 2003 di bello figo su spotify')?.kind, 'music');
+  assert.equal(chat.asked('metti in coda'), null);
 
   assert.equal(chat.asked('aprile'), null); // "apri" is not a prefix match
   assert.equal(chat.asked('chiacchiero'), null); // nor is "chiudi"

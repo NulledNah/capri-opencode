@@ -41,9 +41,18 @@ const MEDIA_ASK = [
 const MUSIC_WORD = /musi|chanson|song|track|titre|morceau|spotify|canzon|brano|faixa|песн|музык|трек/i;
 // "put X on Spotify", "mets X sur Spotify", "pon X en Spotify", "coloca X no Spotify", "включи X в Spotify"
 const SPOTIFY_ASK = /(?:play|put on|put|mets|joue|lance|écoute|pon|toca|reproduce|coloca|toque|metti|riproduci|ascolta|включи|поставь)\s+(?:moi\s+|me\s+|un po' di\s+)?(.+?)\s+(?:on|sur|en|no|na|su|sullo|sulla|в)\s+spotify/i;
-// "queue X", "add X to the queue", "aggiungi X alla coda", "mets X dans la file"
-const QUEUE_WORD = /\b(queue|coda|file d'attente|cola|fila|очеред)/i;
-const QUEUE_ASK = /^(?:capri,?\s+)?(?:aggiungi|metti|accoda|add|ajoute|met[ts]|agrega|adiciona|добавь)\s+(.+?)\s+(?:in coda|alla coda|nella coda|to the (?:queue|line)|à la file|a la cola|na fila|в очередь)/i;
+// "queue X", "add X to the queue", "metti X in coda", "metti in coda X" (any order)
+const QUEUE_PHRASE = /\b(?:in coda|alla coda|nella coda|in queue|in the queue|to the queue|to queue|dans la file|à la file|a la cola|en la cola|na fila|в очередь)\b/i;
+const QUEUE_WORD = /\b(?:queue|in coda|alla coda|nella coda|in queue|in the queue|to the queue|to queue|dans la file|à la file|a la cola|en la cola|na fila|в очередь)\b/i;
+const QUEUE_VERB = /^(?:capri,?\s+)?(?:metti|aggiungi|accoda|inserisci|add|queue|ajoute|met[ts]|agrega|adiciona|добавь)\s+/i;
+const QUEUE_OTHER = /^(?:capri,?\s+)?(?:accoda|queue)\s+/i;
+const queueAsked = (text) => {
+  const raw = String(text || '').trim();
+  if (!QUEUE_WORD.test(raw) && !QUEUE_OTHER.test(raw)) return null;
+  let rest = raw.replace(QUEUE_VERB, '').replace(QUEUE_PHRASE, ' ').replace(/\s+/g, ' ').trim();
+  rest = rest.replace(/\s+(?:su|on|sur|en|no|na|в)\s+spotify\s*$/i, '').trim();
+  return rest || null;
+};
 // "riproduci X", "ascolta X": play it on Spotify, no need to name the service
 const PLAY_ASK = /^(?:capri,?\s+)?(?:riproduci|ascolta|fammi ascoltare)\s+(.+)$/i;
 const MEDIA_ACTIONS = new Set(MEDIA_ASK.map(([action]) => action));
@@ -253,7 +262,7 @@ export class Chat {
     if (memo) return { kind: 'memo', text: memo };
     const media = MEDIA_ASK.find(([, re]) => re.test(text))?.[0];
     if (media && (count <= 5 || MUSIC_WORD.test(text))) return { kind: 'media', action: media };
-    const queue = QUEUE_ASK.exec(text)?.[1]?.trim();
+    const queue = queueAsked(text);
     if (queue) return { kind: 'queue', song: queue };
     const song = SPOTIFY_ASK.exec(text)?.[1] || PLAY_ASK.exec(text)?.[1];
     if (song) return { kind: 'music', song };
@@ -474,7 +483,7 @@ export class Chat {
   // What she can do on the PC when you ask (Windows), and nothing else.
   powers() {
     const lines = [
-      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: answer with one short line and one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, volup, voldown or mute), or [[site: ADDRESS]]. Music and queue start right away, so say it is playing or queued; opening an app, closing one, or a website gets a button to confirm, so never say it is already done. Any other time, write no tag at all: there are no other tags.',
+      'Only when the user asks you to open an app or a game installed on their PC, play something on Spotify, add something to the Spotify queue, control the music playing, or open a website: answer with one short line and one tag: [[open: NAME]], [[music: WHAT TO PLAY]], [[queue: WHAT TO QUEUE]], [[media: ACTION]] (ACTION: pause, play, next, previous, volup, voldown or mute), or [[site: ADDRESS]]. Music and queue start right away, so say it is playing or queued; opening an app, closing one, or a website gets a button to confirm, so never say it is already done. The words "in coda" can come before the song: "metti in coda 2003 di Bello Figo" is [[queue: 2003 di Bello Figo]], never a track called "in coda". Any other time, write no tag at all: there are no other tags.',
     ];
     if (this.apps.length) {
       const open = this.apps.map(({ name, label }) => (label && label !== name ? `${name} (${label})` : name)).join(', ');
