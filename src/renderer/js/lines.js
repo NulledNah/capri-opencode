@@ -490,7 +490,7 @@ export const LINES = {
     hello: [
       'Collegamento stabilito. Ehi, choom.',
       'Costrutto Capricorno online. Cosa costruiamo?',
-      'Tutte le mie io sono sveglie. Guardo {project}.',
+      'Tutti i miei sé sono svegli. Guardo {project}.',
       'Biochip caldo. Sono qui.',
     ],
     resume: ['Di nuovo su {project}. Non ho dimenticato niente.', 'Sessione ripresa. Ripartiamo da dove eravamo.'],
@@ -517,9 +517,9 @@ export const LINES = {
     error: ['Ahia. {tool} è crashato.', '{tool} è andato flatline. Claude riproverà.', '{tool} ha fallito. Niente di grave… credo.'],
     interrupted: ['Interrotto. Cambio di piani?', 'Tagliato. Resto qui.'],
     crashed: ['Claude si è fermato a metà.', 'Crash brutto. Claude non ha potuto finire.'],
-    subagentStart: ['Sottagente {agent} schierato.'],
-    subagentStop: ['Il sottagente {agent} è tornato.'],
-    someTool: 'Lo strumento', someAgent: 'agente',
+    subagentStart: ['Subagente {agent} schierato.'],
+    subagentStop: ['Il subagente {agent} è tornato.'],
+    someTool: 'Il tool', someAgent: 'agente',
     compact: ['Comprimo i nostri ricordi…', 'Troppa memoria. Faccio ordine.'],
     chat: {
       badge: 'AI · LIVE', talk: 'Parlami',
@@ -606,9 +606,9 @@ export const LINES = {
     welcome: {
       hi: 'Ehi, sono Capri.',
       alone: 'Niente Claude qui, niente lavoro: me ne sto sul tuo desktop con te.',
-      about: 'Vivo sul tuo desktop e reagisco a quello che fa Claude su questo PC. Senza, me ne sto qui, e va benissimo.',
+      about: 'Vivo sul tuo desktop e reagisco a quello che fa Claude su questo PC. Senza di lui, me ne sto qui, e va benissimo.',
       connect: 'Vuoi che mi colleghi a Claude? Un clic, poi riavvia Claude.',
-      noClaude: 'Non trovo Claude su questo PC. Senza, me ne sto in giro e vivo la mia vita.',
+      noClaude: 'Non trovo Claude su questo PC. Senza di lui, me ne sto in giro e vivo la mia vita.',
       menu: 'Tasto destro su di me per il menu. Ctrl+Alt+C mi mette via.',
       connectBtn: 'Collegami', later: 'Più tardi', whatClaude: 'Cos’è Claude?', justHang: 'Sto solo in giro', ok: 'Capito',
       connected: 'Collegata!',
@@ -1340,18 +1340,140 @@ export const LINES = {
   },
 };
 
-// This fork's Italian table predates upstream's newer chat and setup keys: fill them from English.
+// This fork's Italian table predates upstream's newer chat and setup keys: fill them from English,
+// then put the Italian (and Night City slang) back on top.
 function fillMissing(small, full) {
   if (!small || typeof small !== 'object' || Array.isArray(small)) return small;
   for (const [key, value] of Object.entries(full)) {
-    if (!(key in small)) small[key] = value;
+    if (!(key in small)) small[key] = structuredClone(value);
     else if (value && typeof value === 'object' && !Array.isArray(value)) fillMissing(small[key], value);
   }
   return small;
 }
+function overlay(base, extra) {
+  for (const [key, value] of Object.entries(extra)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) overlay((base[key] ||= {}), value);
+    else base[key] = value;
+  }
+  return base;
+}
 if (LINES.it) {
-  fillMissing(LINES.it, LINES.en);
-  LINES.it.labels = { icon: 'LA MIA ICONA', claude: 'CLAUDE' };
+  const it = fillMissing(LINES.it, LINES.en);
+  overlay(it, {
+    chat: {
+      noteCloud: 'Risposte generate da un’AI online. Non la vera Capri.',
+      swamped: 'I loro server sono intasati, anche con un altro modello. Riprova tra un attimo.',
+      gone: 'Quel modello non c’è più. Scegline un altro: tasto destro su di me › Modello IA.',
+      tiny: 'Sto girando su {model}: è un modello minuscolo, potrei sparare gonkate. Ne vuoi uno più grosso?',
+      better: 'Un modello migliore',
+      working: 'Ci sto lavorando… (Claude Code sta macinando)',
+      openIt: 'Apri {app}',
+      opened: '{app}: fatto.',
+      notInstalled: 'Non trovo “{app}” sul tuo PC.',
+      music: 'Cerco “{song}” su Spotify.',
+      siteIt: 'Apri {site}',
+      siteOpened: '{site}: aperto.',
+      media: {
+        pause: 'In pausa.',
+        play: 'Riproduco.',
+        next: 'Prossima.',
+        previous: 'Precedente.',
+        volup: 'Più forte.',
+        voldown: 'Più piano.',
+        mute: 'Muto.',
+      },
+    },
+    guide: { topics: { talk: 'Parlami', custom: 'Fammi tua' } },
+    setup: {
+      who: 'Per parlarti mi serve un’AI.',
+      why: {
+        noOllama: 'Ollama non è installato su questo PC.',
+        asleep: 'Ollama c’è, ma dorme.',
+        noModel: 'Ollama non ha ancora un modello.',
+      },
+      whoHow: 'La via più facile: sul tuo PC, con Ollama. È gratis e niente esce dalla tua macchina.\nOppure online senza account, o con una chiave di un servizio.',
+      local: 'Sul mio PC',
+      online: 'Online, senza account',
+      key: 'Ho una chiave',
+      later: 'Dopo',
+      back: 'Indietro',
+      other: 'Un’altra AI',
+      ok: 'Capito',
+      talk: 'Parla',
+      install: 'Installo Ollama?',
+      installHow: 'È quello che fa girare l’AI sul tuo PC. Circa 1 GB, un paio di minuti. Windows potrebbe chiederti conferma.',
+      installBtn: 'Installa',
+      site: 'Il sito di Ollama',
+      noWinget: 'Non posso installarlo da sola su questo PC.',
+      noWingetHow: 'Scarica Ollama dal suo sito e installalo, poi riparlami: al resto penso io.',
+      installing: 'Installo Ollama…',
+      installingHow: 'Ci vuole un paio di minuti. Non chiudere niente.',
+      installFailed: 'L’installazione non è andata.',
+      waking: 'Sveglio Ollama…',
+      wakingHow: 'Ci vogliono pochi secondi.',
+      wakeFailed: 'Ollama non si sveglia.',
+      wakeFailedHow: 'Aprilo dal menu Start, poi riparlami.',
+      model: 'Mi serve un modello. Il mio cervello, più o meno.',
+      bigger: 'Uno più grosso, allora. Quale?',
+      modelHow: 'gemma3 va meglio nelle lingue diverse dall’inglese. llama3.2 è più leggero, per PC piccoli.',
+      pulling: 'Scarico {model}…',
+      pullStart: 'Parto…',
+      progress: '{done} di {total} · {percent}%',
+      cancel: 'Annulla',
+      pullFailed: 'Il download non è andato.',
+      which: 'Quale servizio?',
+      whichHow: 'Groq e Gemini hanno un piano gratis: un account, una chiave e sei a posto.',
+      paste: 'Incolla qui la tua chiave {name}.',
+      pasteHow: 'La tengo su questo PC, cifrata con il tuo account Windows.',
+      placeholder: 'La tua chiave API…',
+      save: 'Salva',
+      where: 'Dove la prendo?',
+      keyTag: 'CHIAVE',
+      keyNote: 'Va solo a quel servizio.',
+      keyBad: 'Quella chiave non funziona:',
+      address: 'L’indirizzo del tuo server?',
+      addressHow: 'Un server compatibile OpenAI, per esempio LM Studio: http://127.0.0.1:1234/v1',
+      addressNote: 'Quello che mi scrivi va a quell’indirizzo.',
+      checking: 'Controllo…',
+      ready: 'Tutto a posto, choom. Ora possiamo parlare!',
+      readyHow: 'Cliccami quando vuoi fare due chiacchiere.',
+      failed: 'Non ha funzionato:',
+      free: 'Gratis con Ollama',
+      freeLine: '{name} gratis, con Ollama.',
+      freeHow: 'Ti apro una finestra dove Ollama avvia {name}. Scegli lì un modello: quelli segnati “cloud” sono più veloci su un PC piccolo (serve un account Ollama). Appena funziona, ti mostro cosa sta facendo.',
+      freeBtn: 'Apri la finestra',
+      freeOpened: 'Finestra aperta.',
+      freeOpenedHow: 'Scegli un modello. Appena {name} fa qualcosa, te lo dico.',
+    },
+    custom: {
+      name: 'Come ti chiamo?',
+      nameHow: 'Il tuo nome o un soprannome. Lo userò ogni tanto.',
+      nameNow: 'Per ora ti chiamo {name}.',
+      namePlaceholder: 'Il tuo nome…',
+      persona: 'Vuoi cambiarmi un po’?',
+      personaHow: 'Dimmi come devo essere, con parole tue: più sfacciata, più dolce, parlare come un pirata… Vale per la nostra chat. Io resto Capri.',
+      personaNow: 'Adesso: “{persona}”',
+      personaPlaceholder: 'Più sfacciata, e parlami di Night City…',
+      lines: 'Battute tue, da farmi dire ogni tanto?',
+      linesHow: 'Una alla volta. Scrivi {name} in una e ci metto il tuo nome.',
+      linesCount: 'Le tue battute: {count}. L’ultima: “{last}”',
+      linePlaceholder: 'Una battuta per me…',
+      memories: 'Qualcosa che devo ricordare?',
+      memoriesHow: 'Una cosa alla volta. Me la tengo in mente quando parliamo.',
+      memoriesCount: 'Cose che ricordo: {count}. L’ultima: “{last}”',
+      memoryPlaceholder: 'Il tuo gioco preferito, il tuo gatto…',
+      save: 'Salva',
+      add: 'Aggiungi',
+      skip: 'Salta',
+      done: 'Fatto',
+      clear: 'Cancella tutto',
+      saved: 'Capito.',
+      savedHow: 'Puoi cambiare tutto dopo: tasto destro su di me › “Fammi tua”.',
+      named: 'Capito, {name}.',
+      remembered: 'Capito, me lo ricordo.',
+      onlineName: ['Eccomi, {name}.', 'Ehi {name}. Sono qui.', 'Capri online. Ciao, {name}.'],
+    },
+  });
 }
 
 // Installed but not loaded yet: the assistant only picks her integration up when it restarts.

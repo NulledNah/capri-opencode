@@ -223,7 +223,7 @@ export class Guide {
     // she knows where Claude is if you've used it with her before: she shows you where to restart it
     const win = this.claudeWindow();
     const scene = this.sceneId;
-    if (win && this.capri.canPoint(win)) await this.capri.pointAt(win, { label: this.t.labels.claude });
+    if (win && this.capri.canPoint(win)) await this.capri.pointAt(win, { label: this.t.guide.labels.claude });
     if (scene !== this.sceneId) return; // another scene took over meanwhile
     await this.ask({ kind: 'done', face: 'laugh', line: w.connected, quote: w.restart, actions: [{ id: 'ok', label: w.ok }] });
   }
@@ -233,7 +233,7 @@ export class Guide {
     const t = this.t.icon;
     const place = await this.host.trayPlace();
     const scene = this.sceneId;
-    await this.capri.pointAt(place.icon || place.corner, { label: this.t.labels.icon });
+    await this.capri.pointAt(place.icon || place.corner, { label: this.t.guide.labels.icon });
     if (scene !== this.sceneId) return; // another scene took over meanwhile
     await this.ask({ face: 'look', line: t.line, quote: place.icon ? t.quote : t.hidden, actions: this.ok() });
   }
@@ -253,7 +253,7 @@ export class Guide {
       await this.ask({ face: 'calm', line: t.behind, quote: t.behindHow, actions: this.ok() });
     } else {
       const scene = this.sceneId;
-      await this.capri.pointAt(win, { label: this.t.labels.claude });
+      await this.capri.pointAt(win, { label: this.t.guide.labels.claude });
       if (scene !== this.sceneId) return; // another scene took over meanwhile
       await this.ask({ face: 'look', line: t.there, quote: t.thereHow, actions: this.ok() });
     }
